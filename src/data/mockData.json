@@ -1,0 +1,248 @@
+{
+  "firma": "Hurtado Gandini Abogados S.A.S.",
+  "abogadoActivo": {
+    "nombre": "Dra. Valentina Hurtado",
+    "tarjetaProfesional": "TP 248915",
+    "rol": "Abogado"
+  },
+  "procesos": [
+    {
+      "id": "P-001",
+      "radicado": "11001310300520240012300",
+      "cliente": "Inversiones del Pacífico S.A.S.",
+      "abogado": "Dra. Valentina Hurtado",
+      "jurisdiccion": "civil",
+      "despacho": "Juzgado 5 Civil del Circuito de Bogotá",
+      "estado": "E2",
+      "estadoLabel": "Apertura",
+      "criticidad": "Critica",
+      "ultimaActuacion": "Fijación de audiencia inicial (art. 372 CGP)",
+      "vencimientoTermino": "2026-06-22T17:00:00",
+      "lineaTiempo": [
+        {
+          "fecha": "2026-04-10",
+          "tipo": "Auto",
+          "titulo": "Auto admisorio de la demanda",
+          "descripcion": "El despacho admite la demanda de responsabilidad civil contractual y ordena correr traslado al demandado por el término de ley.",
+          "criticidad": "Importante",
+          "estado": "E1"
+        },
+        {
+          "fecha": "2026-05-02",
+          "tipo": "Notificacion",
+          "titulo": "Notificación por estado (art. 295 CGP)",
+          "descripcion": "Se notifica por estado el auto admisorio. Comienzan a correr los términos para contestación de la demanda.",
+          "criticidad": "Informativa",
+          "estado": "E1"
+        },
+        {
+          "fecha": "2026-06-15",
+          "tipo": "Audiencia",
+          "titulo": "Fijación de audiencia inicial (art. 372 CGP)",
+          "descripcion": "El juzgado fija fecha para audiencia inicial el 22/06/2026 a las 9:00 a.m. Se requiere asistencia obligatoria de las partes y sus apoderados.",
+          "criticidad": "Critica",
+          "estado": "E2"
+        }
+      ],
+      "resumenCliente": "Su caso avanza bien. El juez ya aceptó la demanda y citó a una reunión formal (audiencia) para el próximo 22 de junio. Es importante que esté disponible ese día porque su presencia o la de su representante es obligatoria. No necesita preparar documentos por ahora; nosotros nos encargamos de todo y le confirmaremos los detalles un día antes.",
+      "resumenAbogado": "Proceso en E2 (Apertura). Auto admisorio notificado por estado el 02/05. Despacho fijó audiencia inicial art. 372 CGP para el 22/06 09:00. Verificar poder vigente, preparar interrogatorio de parte y fijar hechos. Término crítico: la inasistencia injustificada acarrea consecuencias procesales (presunción de hechos / multa)."
+    },
+    {
+      "id": "P-002",
+      "radicado": "76001310500320240008765",
+      "cliente": "Carlos Andrés Restrepo Mejía",
+      "abogado": "Dra. Valentina Hurtado",
+      "jurisdiccion": "laboral",
+      "despacho": "Juzgado 3 Laboral del Circuito de Cali",
+      "estado": "E3",
+      "estadoLabel": "Trámite / pruebas",
+      "criticidad": "Importante",
+      "ultimaActuacion": "Traslado para alegatos de conclusión",
+      "vencimientoTermino": "2026-06-26T17:00:00",
+      "lineaTiempo": [
+        {
+          "fecha": "2026-02-18",
+          "tipo": "Auto",
+          "titulo": "Auto admisorio de la demanda laboral",
+          "descripcion": "Se admite demanda ordinaria laboral por despido sin justa causa y se ordena notificar al empleador demandado.",
+          "criticidad": "Importante",
+          "estado": "E1"
+        },
+        {
+          "fecha": "2026-04-05",
+          "tipo": "Audiencia",
+          "titulo": "Audiencia de conciliación y decisión de excepciones",
+          "descripcion": "Realizada audiencia del art. 77 CPTSS. No hubo conciliación. Se decretan pruebas y se programa práctica testimonial.",
+          "criticidad": "Importante",
+          "estado": "E3"
+        },
+        {
+          "fecha": "2026-06-12",
+          "tipo": "Traslado",
+          "titulo": "Traslado para alegatos de conclusión",
+          "descripcion": "Practicadas las pruebas, se corre traslado a las partes para presentar alegatos de conclusión por escrito dentro del término legal.",
+          "criticidad": "Importante",
+          "estado": "E3"
+        }
+      ],
+      "resumenCliente": "Su proceso por el despido va por buen camino. Ya se hicieron las pruebas (incluidos los testigos) y ahora es el momento en que cada parte presenta sus argumentos finales al juez. Nosotros prepararemos y radicaremos sus argumentos a tiempo. Después de esto, el siguiente paso será la decisión del juez. No requerimos nada de su parte en este momento.",
+      "resumenAbogado": "Proceso en E3. Surtida audiencia art. 77 CPTSS sin conciliación; pruebas practicadas. Corre traslado para alegatos de conclusión, vence 26/06. Consolidar línea argumental sobre despido sin justa causa: indemnización art. 64 CST y acreencias laborales. Radicar memorial dentro del término."
+    },
+    {
+      "id": "P-003",
+      "radicado": "05001233300020240004532",
+      "cliente": "Comercializadora Andina Ltda.",
+      "abogado": "Dra. Valentina Hurtado",
+      "jurisdiccion": "administrativo",
+      "despacho": "Tribunal Administrativo de Antioquia",
+      "estado": "E1",
+      "estadoLabel": "Admisión",
+      "criticidad": "Critica",
+      "ultimaActuacion": "Inadmisión — requiere subsanación",
+      "vencimientoTermino": "2026-06-20T17:00:00",
+      "lineaTiempo": [
+        {
+          "fecha": "2026-05-28",
+          "tipo": "Radicacion",
+          "titulo": "Radicación de medio de control de nulidad y restablecimiento",
+          "descripcion": "Se radica demanda de nulidad y restablecimiento del derecho contra acto administrativo sancionatorio (Ley 1437 de 2011).",
+          "criticidad": "Informativa",
+          "estado": "E0"
+        },
+        {
+          "fecha": "2026-06-13",
+          "tipo": "Auto",
+          "titulo": "Auto inadmisorio de la demanda",
+          "descripcion": "El Tribunal inadmite la demanda por falta de anexo del acto administrativo demandado y otorga 5 días para subsanar (art. 90 CGP / art. 170 CPACA).",
+          "criticidad": "Critica",
+          "estado": "E1"
+        }
+      ],
+      "resumenCliente": "Hay un punto que debemos resolver pronto. El tribunal recibió la demanda pero pidió que completemos un documento que faltaba. Tenemos un plazo corto (hasta el 20 de junio) para enviarlo. Ya estamos preparando lo necesario y lo radicaremos a tiempo; le avisaremos en cuanto quede subsanado. No se preocupe: es un trámite normal y está bajo control.",
+      "resumenAbogado": "ALERTA E1. Auto inadmisorio del 13/06: falta anexar el acto administrativo demandado. Término de subsanación 5 días hábiles (art. 90 CGP), vence 20/06. Riesgo de rechazo de plano si no se subsana. Adjuntar acto + escrito de subsanación y radicar HOY/MAÑANA. Prioridad máxima."
+    },
+    {
+      "id": "P-004",
+      "radicado": "11001310301120230015890",
+      "cliente": "María Fernanda Ocampo Ríos",
+      "abogado": "Dra. Valentina Hurtado",
+      "jurisdiccion": "civil",
+      "despacho": "Juzgado 11 Civil del Circuito de Bogotá",
+      "estado": "E4",
+      "estadoLabel": "Decisión / fallo",
+      "criticidad": "Critica",
+      "ultimaActuacion": "Sentencia de primera instancia — término para apelar",
+      "vencimientoTermino": "2026-06-24T17:00:00",
+      "lineaTiempo": [
+        {
+          "fecha": "2026-03-20",
+          "tipo": "Audiencia",
+          "titulo": "Audiencia de instrucción y juzgamiento (art. 373 CGP)",
+          "descripcion": "Practicadas pruebas y oídos los alegatos, el despacho anuncia el sentido del fallo en proceso de pertenencia.",
+          "criticidad": "Importante",
+          "estado": "E3"
+        },
+        {
+          "fecha": "2026-06-11",
+          "tipo": "Fallo",
+          "titulo": "Sentencia de primera instancia",
+          "descripcion": "Se profiere sentencia que accede parcialmente a las pretensiones. Notificada por estado, corre término de ejecutoria.",
+          "criticidad": "Critica",
+          "estado": "E4"
+        },
+        {
+          "fecha": "2026-06-13",
+          "tipo": "Notificacion",
+          "titulo": "Notificación por estado de la sentencia (art. 295 CGP)",
+          "descripcion": "Se notifica la sentencia por estado. Comienza a correr el término de 3 días para interponer recurso de apelación (art. 322 CGP).",
+          "criticidad": "Critica",
+          "estado": "E4"
+        }
+      ],
+      "resumenCliente": "Ya tenemos la decisión del juez en primera instancia: le dio la razón en parte de lo solicitado. Ahora hay una ventana corta para decidir si pedimos que un juez superior revise el caso para mejorar el resultado. Necesitamos conversar con usted en los próximos días para tomar esa decisión juntos. La llamaremos para explicarle las opciones antes de que venza el plazo.",
+      "resumenAbogado": "Proceso en E4. Sentencia de primera instancia (acoge parcialmente) notificada por estado el 13/06. Término de ejecutoria / apelación: 3 días (art. 322 CGP), vence 24/06. Decisión estratégica con cliente: sustentar apelación sobre pretensiones negadas. Preparar reparos concretos."
+    },
+    {
+      "id": "P-005",
+      "radicado": "08001310300720240003211",
+      "cliente": "Distribuciones Caribe S.A.",
+      "abogado": "Dra. Valentina Hurtado",
+      "jurisdiccion": "civil",
+      "despacho": "Juzgado 7 Civil del Circuito de Barranquilla",
+      "estado": "E3",
+      "estadoLabel": "Trámite / pruebas",
+      "criticidad": "Informativa",
+      "ultimaActuacion": "Constancia secretarial",
+      "vencimientoTermino": null,
+      "lineaTiempo": [
+        {
+          "fecha": "2026-01-22",
+          "tipo": "Auto",
+          "titulo": "Auto admisorio de la demanda ejecutiva",
+          "descripcion": "Se libra mandamiento de pago en proceso ejecutivo singular por título valor (pagaré).",
+          "criticidad": "Importante",
+          "estado": "E1"
+        },
+        {
+          "fecha": "2026-03-15",
+          "tipo": "Auto",
+          "titulo": "Decreto de medidas cautelares",
+          "descripcion": "Se decreta embargo y secuestro de bienes del ejecutado para garantizar el pago de la obligación.",
+          "criticidad": "Importante",
+          "estado": "E3"
+        },
+        {
+          "fecha": "2026-06-16",
+          "tipo": "Constancia",
+          "titulo": "Constancia secretarial",
+          "descripcion": "La secretaría deja constancia de que el expediente pasa al despacho para proveer sobre la liquidación del crédito presentada.",
+          "criticidad": "Informativa",
+          "estado": "E3"
+        }
+      ],
+      "resumenCliente": "Su proceso de cobro sigue su curso normal. Ya se ordenó retener bienes de la persona que le debe, como garantía. El movimiento más reciente es un trámite interno del juzgado: están organizando el expediente para revisar las cuentas del cobro. No hay nada urgente ni requerimos acción suya. Le avisaremos cuando haya una novedad importante.",
+      "resumenAbogado": "Proceso ejecutivo en E3. Mandamiento de pago librado; medidas cautelares (embargo y secuestro) decretadas y vigentes. Constancia secretarial del 16/06: expediente al despacho para proveer sobre liquidación del crédito presentada. Mero trámite, sin término a cargo. Seguimiento pasivo."
+    },
+    {
+      "id": "P-006",
+      "radicado": "11001400300920240006677",
+      "cliente": "Fundación Semilla Verde",
+      "abogado": "Dra. Valentina Hurtado",
+      "jurisdiccion": "laboral",
+      "despacho": "Juzgado 9 Laboral del Circuito de Bogotá",
+      "estado": "E2",
+      "estadoLabel": "Apertura",
+      "criticidad": "Importante",
+      "ultimaActuacion": "Solicitud de prueba — exhibición de documentos",
+      "vencimientoTermino": "2026-06-28T17:00:00",
+      "lineaTiempo": [
+        {
+          "fecha": "2026-04-30",
+          "tipo": "Auto",
+          "titulo": "Auto admisorio de la demanda",
+          "descripcion": "Se admite demanda ordinaria laboral y se ordena notificación al demandado.",
+          "criticidad": "Importante",
+          "estado": "E1"
+        },
+        {
+          "fecha": "2026-05-20",
+          "tipo": "Notificacion",
+          "titulo": "Notificación personal al demandado",
+          "descripcion": "El demandado se notifica personalmente del auto admisorio. Corre término para contestación.",
+          "criticidad": "Informativa",
+          "estado": "E1"
+        },
+        {
+          "fecha": "2026-06-14",
+          "tipo": "Prueba",
+          "titulo": "Solicitud de prueba — exhibición de documentos",
+          "descripcion": "La parte demandada solicita exhibición de documentos contables. El despacho corre traslado para pronunciarse sobre la solicitud probatoria.",
+          "criticidad": "Importante",
+          "estado": "E2"
+        }
+      ],
+      "resumenCliente": "Su caso continúa avanzando. La otra parte pidió revisar ciertos documentos contables, algo habitual en este tipo de procesos. Nosotros revisaremos esa solicitud y responderemos lo que corresponda dentro del plazo. Es posible que más adelante le pidamos algunos documentos; si es así, se lo indicaremos con tiempo. Por ahora todo bajo control.",
+      "resumenAbogado": "Proceso en E2. Notificación personal surtida. Demandada solicita exhibición de documentos contables (art. 265 CGP); corre traslado para pronunciarse, vence 28/06. Evaluar pertinencia y conducencia, oponerse si procede o coordinar con cliente la exhibición. Riesgo medio."
+    }
+  ]
+}

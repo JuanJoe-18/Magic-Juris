@@ -1,0 +1,44 @@
+Aquí está el prompt exacto, listo para copiar y pegar en Claude Code:
+
+---
+
+Eres un experto en diseño UI/UX de alto nivel y desarrollo frontend con React + Tailwind CSS. Vamos a construir el MVP para el Reto 3 — Sistema de Seguimiento Judicial Automatizado de la firma Hurtado Gandini Abogados (Legal Hack Icesi 2026).
+
+**IDENTIDAD DE MARCA HG:**
+- Logo: "HG Hurtado Gandini" — tipografía bold, estilo corporativo legal
+- Paleta: fondo negro profundo `#0D0D0D`, superficies `#161616` y `#1E1E1E`, acento rojo `#C5202E`, texto blanco/gris claro
+- Estética: Dark Premium — glassmorphism sutil, bordes `rgba(255,255,255,0.08)`, sin gradientes kitsch
+
+**STACK:** React 18 + Tailwind CSS + Vite. Usa `lucide-react` para iconos. Sin otras dependencias externas.
+
+**LO QUE DEBES CONSTRUIR:**
+
+1. `src/data/mockData.json` — datos ficticios bien estructurados con al menos 6 procesos judiciales, cada uno con: radicado (23 dígitos), cliente, abogado responsable, jurisdicción (civil/laboral/administrativo), estado actual (E1-E4 según el modelo de estados), criticidad de la última actuación (Crítica/Importante/Informativa), línea de tiempo de actuaciones (mínimo 3 por proceso), y resumen IA en lenguaje claro para el cliente.
+
+2. `src/components/Sidebar.jsx` — barra lateral de navegación con logo HG, links: Dashboard, Mis Procesos, Alertas, Historial, Configuración. Indicador del rol activo (Abogado). Contador de alertas críticas pendientes.
+
+3. `src/components/ProcessCard.jsx` — tarjeta para cada proceso judicial con: número de radicado, nombre del cliente, jurisdicción, abogado, estado del proceso, y un badge 3D llamativo con la criticidad (rojo pulsante para Crítica, ámbar para Importante, azul para Informativa). Al hacer click expande el panel de detalle.
+
+4. `src/components/ProcessDetail.jsx` — panel expandible que muestra: línea de tiempo vertical de las actuaciones (con íconos por tipo, fecha, descripción técnica), y debajo un panel estilo chat donde aparece el resumen en lenguaje claro que la IA generó para el cliente (simula la respuesta del LLM con el texto del mockData).
+
+5. `src/components/AlertsBanner.jsx` — banner superior que lista las actuaciones críticas del día con cuenta regresiva al vencimiento del término (simulado).
+
+6. `src/pages/AbogadoDashboard.jsx` — página principal que ensambla todo: AlertsBanner arriba, grid de ProcessCards, y el ProcessDetail que se abre al seleccionar un proceso.
+
+7. `src/App.jsx` y `src/index.css` — configuración base con Tailwind, fuente Sora de Google Fonts (via @import), variables CSS globales de la marca HG.
+
+**CRITERIOS DE DISEÑO OBLIGATORIOS:**
+- Fondo base `#0D0D0D`, superficies con `background: rgba(255,255,255,0.04)` y `backdrop-filter: blur(12px)`
+- Bordes `1px solid rgba(255,255,255,0.08)`
+- Badge Crítica: fondo `#C5202E`, texto blanco, `box-shadow: 0 0 12px rgba(197,32,46,0.6)`, animación pulse
+- Badge Importante: fondo `#B8621A`, texto blanco
+- Badge Informativa: fondo `#1A5C8A`, texto blanco
+- Tipografía: Sora para headings, Inter para body
+- Sidebar fija de 260px, contenido principal scrolleable
+- Responsive: en móvil el sidebar colapsa a iconos
+
+**ENTREGABLE:** Todos los archivos listos para correr con `npm run dev` sin errores. Código limpio, comentado, modular. El mockData debe ser rico y realista (nombres colombianos, radicados reales de 23 dígitos, actuaciones del CGP como "Auto admisorio", "Notificación por estado art. 295", "Fijación de audiencia inicial art. 372", etc.).
+
+---
+
+Ese prompt lo puedes pegar directo en Claude Code dentro de `C:\Users\1112041962\Documents\Magic-Juris`. Él va a crear todos los archivos, tú solo corres `npm run dev` y tienes el dashboard funcionando. Cuando lo tengas andando, me mandas un pantallazo y seguimos con la vista del Cliente y el Admin.
