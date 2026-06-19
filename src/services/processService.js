@@ -2,7 +2,7 @@ import { apiClient } from './apiClient';
 
 export const processService = {
   getProcesses: async (skip = 0, limit = 100) => {
-    return apiClient.get(`/processes?skip=${skip}&limit=${limit}`);
+    return apiClient.get(`/processes/?skip=${skip}&limit=${limit}`);
   },
 
   getProcess: async (id) => {
@@ -14,7 +14,7 @@ export const processService = {
   },
 
   createProcess: async (processData) => {
-    return apiClient.post('/processes', processData);
+    return apiClient.post('/processes/', processData);
   },
 
   updateProcess: async (id, processData) => {

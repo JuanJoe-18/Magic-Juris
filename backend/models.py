@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ForeignKey
 from sqlalchemy.orm import relationship
 import datetime
 from database import Base
@@ -99,3 +99,31 @@ class CommunicationHistory(Base):
     message = Column(String)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class EmailLog(Base):
+    __tablename__ = "email_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    to_email = Column(String, index=True)
+    to_name = Column(String)
+    subject = Column(String)
+    email_type = Column(String) # "process_assigned", "communication", "actuation_alert"
+    process_id = Column(Integer, ForeignKey("processes.id"), nullable=True, index=True)
+    sent_successfully = Column(Boolean, default=False)
+    error_message = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class ClientTask(Base):
+    __tablename__ = "client_tasks"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    process_id = Column(Integer, ForeignKey("processes.id"), index=True)
+    assigned_by_id = Column(Integer, ForeignKey("users.id"), index=True)  # Abogado
+    client_id = Column(Integer, ForeignKey("users.id"), index=True)
+    assigned_to_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=True)  # Legacy alias
+    title = Column(String)
+    description = Column(String)
+    priority = Column(String, default="MEDIA")  # ALTA, MEDIA, BAJA
+    due_date = Column(Date, nullable=True)
+    status = Column(String, default="PENDIENTE")  # PENDIENTE, EN_PROCESO, COMPLETADA
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)

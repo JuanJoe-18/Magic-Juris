@@ -4,7 +4,7 @@ export const actuationService = {
   getActuations: async (processId = null) => {
     const endpoint = processId 
       ? `/actuaciones/process/${processId}`
-      : '/actuaciones';
+      : '/actuaciones/';
     return apiClient.get(endpoint);
   },
 
@@ -13,6 +13,6 @@ export const actuationService = {
   },
 
   createActuation: async (actuation) => {
-    return apiClient.post('/actuaciones', actuation);
+    return apiClient.post('/actuaciones/', actuation);
   }
 };

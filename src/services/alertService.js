@@ -2,7 +2,7 @@ import { apiClient } from './apiClient';
 
 export const alertService = {
   getAlerts: async (leida = null) => {
-    let endpoint = '/alerts';
+    let endpoint = '/alerts/';
     if (leida !== null) {
       endpoint += `?leida=${leida}`;
     }

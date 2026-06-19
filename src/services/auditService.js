@@ -2,7 +2,7 @@ import { apiClient } from './apiClient';
 
 export const auditService = {
   getAuditLogs: async (processId = null, actionType = null) => {
-    let endpoint = '/audit';
+    let endpoint = '/audit/';
     const params = [];
     if (processId) params.push(`process_id=${processId}`);
     if (actionType) params.push(`action_type=${actionType}`);

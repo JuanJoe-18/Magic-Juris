@@ -1,10 +1,11 @@
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import {
   LayoutDashboard,
   FolderSearch,
   BarChart3,
   Mail,
   Activity,
+  Users,
 } from 'lucide-react'
 import { MockContext } from '../context/MockContext'
 import TopBar from '../components/shared/TopBar'
@@ -12,6 +13,9 @@ import NavSidebar from '../components/shared/NavSidebar'
 import AdminPanel, { CasosTabla } from '../components/admin/AdminPanel'
 import { EstadoBars, ParticipacionDonut, ActividadLine } from '../components/admin/charts'
 import { formatFecha } from '../lib/ui'
+import { taskService } from '../services/taskService'
+import UserManagementPanel from '../components/admin/UserManagementPanel'
+import { useAuth } from '../context/AuthContext'
 
 const items = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -19,6 +23,7 @@ const items = [
   { id: 'reportes', label: 'Reportes', icon: BarChart3 },
   { id: 'correos', label: 'Correos', icon: Mail },
   { id: 'actividad', label: 'Actividad', icon: Activity },
+  { id: 'usuarios', label: 'Usuarios', icon: Users },
 ]
 
 const estados = [
@@ -42,7 +47,21 @@ function Panel({ titulo, subtitulo, children }) {
 // ── Vista del Administrador: Dashboard · Casos · Reportes · Correos · Actividad ──
 export default function AdminDashboard({ onHome, onNavigate }) {
   const { procesos } = useContext(MockContext)
+  const { user } = useAuth()
   const [vista, setVista] = useState('dashboard')
+  const [tasks, setTasks] = useState([])
+
+  useEffect(() => {
+    const loadTasks = async () => {
+      try {
+        const data = await taskService.getTasks()
+        setTasks(data)
+      } catch (error) {
+        console.warn('No fue posible cargar tareas para admin.', error)
+      }
+    }
+    loadTasks()
+  }, [])
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] font-inter text-white">
@@ -50,7 +69,7 @@ export default function AdminDashboard({ onHome, onNavigate }) {
         <TopBar
           titulo="Panel administrativo de casos activos"
           onHome={onHome}
-          usuario={{ rol: 'ADMINISTRATIVO' }}
+          usuario={{ nombre: user?.name, rol: user?.role, email: user?.email }}
           rolActual="admin"
           onSwitchRole={onNavigate}
         />
@@ -66,7 +85,40 @@ export default function AdminDashboard({ onHome, onNavigate }) {
           </div>
 
           <main className="min-w-0">
-            {vista === 'dashboard' && <AdminPanel procesos={procesos} />}
+            {vista === 'dashboard' && (
+              <div className="space-y-5">
+                <AdminPanel procesos={procesos} />
+                <Panel
+                  titulo="Tareas activas"
+                  subtitulo="Vista rapida de tareas de clientes registradas en el sistema."
+                >
+                  <div className="space-y-3">
+                    {tasks.length > 0 ? (
+                      tasks.slice(0, 6).map((task) => (
+                        <div
+                          key={task.id}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#262626] bg-[#161616] px-4 py-3"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-white">{task.title}</p>
+                            <p className="text-[12px] text-white/45">
+                              Proceso #{task.process_id} · {task.priority} · {task.status}
+                            </p>
+                          </div>
+                          <span className="text-[12px] text-white/40">
+                            {task.due_date || 'Sin fecha limite'}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-white/45">
+                        Aun no hay tareas activas registradas.
+                      </p>
+                    )}
+                  </div>
+                </Panel>
+              </div>
+            )}
 
             {vista === 'casos' && (
               <CasosTabla
@@ -161,6 +213,8 @@ export default function AdminDashboard({ onHome, onNavigate }) {
                 </Panel>
               </div>
             )}
+
+            {vista === 'usuarios' && <UserManagementPanel />}
           </main>
         </div>
       </div>

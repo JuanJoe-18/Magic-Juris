@@ -6,9 +6,24 @@ import { formatRadicado } from '../../lib/ui'
 export default function ClienteRadicado({ procesos = [], onSelect }) {
   const [valor, setValor] = useState('')
 
-  const consultar = () => {
+  const consultar = async () => {
     const q = valor.trim().toLowerCase()
     const limpio = q.replace(/\D/g, '')
+    if (limpio && limpio.length === 23) {
+      try {
+        const { processService } = await import('../../services/processService')
+        const process = await processService.getProcessByRadicado(limpio)
+        onSelect?.({
+          ...process,
+          cliente: 'Mi proceso',
+          lineaTiempo: process.lineaTiempo ?? [],
+        })
+        return
+      } catch (error) {
+        console.warn('Radicado no encontrado en backend, usando datos demo.', error)
+      }
+    }
+
     const match =
       (limpio && procesos.find((p) => p.radicado.includes(limpio))) ||
       procesos.find((p) => p.cliente.toLowerCase().includes(q)) ||

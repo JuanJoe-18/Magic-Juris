@@ -1,6 +1,8 @@
 import { useContext, useState } from 'react'
 import { Search, History } from 'lucide-react'
+
 import { MockContext } from '../context/MockContext'
+import { useAuth } from '../context/AuthContext'
 import TopBar from '../components/shared/TopBar'
 import NavSidebar from '../components/shared/NavSidebar'
 import ClienteConsultaView from '../components/cliente/ClienteConsultaView'
@@ -11,21 +13,19 @@ const items = [
   { id: 'historial', label: 'Historial', icon: History },
 ]
 
-const usuario = { nombre: 'Camilo', rol: 'CLIENTE', email: 'camilo@correo.com' }
-
-// ── Vista del Cliente: Consulta · Historial (diseño Fajardo) ──
 export default function ClienteDashboard({ onHome, onNavigate }) {
   const { procesos } = useContext(MockContext)
+  const { user } = useAuth()
   const [vista, setVista] = useState('consulta')
-  const [proceso, setProceso] = useState(procesos[0] ?? null)
+  const [proceso, setProceso] = useState(null)
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] font-inter text-white">
       <div className="mx-auto max-w-[1440px] px-4 py-5 md:px-8">
         <TopBar
-          titulo="Consulta por número de radicado"
+          titulo="Consulta por numero de radicado"
           onHome={onHome}
-          usuario={usuario}
+          usuario={{ nombre: user?.name, rol: user?.role, email: user?.email }}
           rolActual="cliente"
           onSwitchRole={onNavigate}
         />
@@ -37,17 +37,9 @@ export default function ClienteDashboard({ onHome, onNavigate }) {
 
           <main className="min-w-0">
             {vista === 'consulta' ? (
-              <ClienteConsultaView
-                procesos={procesos}
-                proceso={proceso}
-                onSelect={setProceso}
-              />
+              <ClienteConsultaView procesos={procesos} proceso={proceso} onSelect={setProceso} />
             ) : (
-              <ClienteHistorialView
-                procesos={procesos}
-                proceso={proceso}
-                onSelect={setProceso}
-              />
+              <ClienteHistorialView procesos={procesos} proceso={proceso} onSelect={setProceso} />
             )}
           </main>
         </div>

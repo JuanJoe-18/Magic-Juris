@@ -1,5 +1,6 @@
 import { useContext, useState } from 'react'
 import { MockContext } from '../context/MockContext'
+import { useAuth } from '../context/AuthContext'
 import AbogadoSidebar from '../components/abogado/AbogadoSidebar'
 import AbogadoHeader from '../components/abogado/AbogadoHeader'
 import ConsultaView from '../components/abogado/ConsultaView'
@@ -31,8 +32,9 @@ const headerPorVista = {
 // ── Vista del Abogado (diseño Fajardo): Consulta · Historial · Asignar ──
 export default function AbogadoDashboard({ onHome, onNavigate }) {
   const { procesos } = useContext(MockContext)
+  const { user } = useAuth()
   const [vista, setVista] = useState('consulta')
-  const [proceso, setProceso] = useState(procesos[0] ?? null)
+  const [proceso, setProceso] = useState(null)
 
   const h = headerPorVista[vista]
 
@@ -40,12 +42,11 @@ export default function AbogadoDashboard({ onHome, onNavigate }) {
     <div className="min-h-screen bg-[#0D0D0D] font-inter text-white">
       <div className="mx-auto max-w-[1440px] px-4 py-5 md:px-8">
         <AbogadoHeader
-          titulo={h.titulo}
-          subtitulo={h.subtitulo}
           mostrarCampana={h.campana}
           onHome={onHome}
           rolActual="abogado"
           onSwitchRole={onNavigate}
+          usuario={{ nombre: user?.name, rol: user?.role }}
         />
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
