@@ -4,7 +4,7 @@ require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const prisma = require('../db')
-const { monitorearPorRadicado } = require('../services/monitoreo')
+const { consultarProceso } = require('../services/monitoreo')
 const { normalizarRadicado } = require('../lib/radicado')
 
 const app = express()
@@ -32,9 +32,33 @@ function serializarProceso(p) {
     cliente: p.cliente?.nombre,
     jurisdiccion: p.jurisdiccion,
     despacho: p.despacho,
+    demandantes: p.demandantes,
+    demandados: p.demandados,
     estado: p.estado,
     estadoLabel: p.estadoLabel,
+    sincronizadoEn: (() => {
+      try {
+        return JSON.parse(p.ultimoEstadoConocido || '{}').consultadoEn || null
+      } catch {
+        return null
+      }
+    })(),
   }
+}
+
+// Resúmenes IA más recientes del proceso (por rol). Módulo E los generará en vivo.
+async function obtenerResumenes(procesoId) {
+  const [abogado, cliente] = await Promise.all([
+    prisma.resumen.findFirst({
+      where: { rolDestino: 'abogado', actuacion: { procesoId } },
+      orderBy: { generadoEn: 'desc' },
+    }),
+    prisma.resumen.findFirst({
+      where: { rolDestino: 'cliente', actuacion: { procesoId } },
+      orderBy: { generadoEn: 'desc' },
+    }),
+  ])
+  return { abogado: abogado?.contenido || null, cliente: cliente?.contenido || null }
 }
 
 app.get('/api/health', (req, res) => res.json({ ok: true }))
@@ -62,6 +86,7 @@ app.get('/api/procesos/:radicado', async (req, res) => {
   res.json({
     proceso: serializarProceso(proceso),
     actuaciones: proceso.actuaciones.map(serializarActuacion),
+    resumenes: await obtenerResumenes(proceso.id),
   })
 })
 
@@ -69,7 +94,7 @@ app.get('/api/procesos/:radicado', async (req, res) => {
 app.post('/api/procesos/:radicado/consultar', async (req, res) => {
   try {
     const radicado = normalizarRadicado(req.params.radicado)
-    const r = await monitorearPorRadicado(radicado)
+    const r = await consultarProceso(radicado) // con respaldo si la RJ se cae
     const proceso = await prisma.proceso.findUnique({
       where: { radicado },
       include: {
@@ -80,10 +105,13 @@ app.post('/api/procesos/:radicado/consultar', async (req, res) => {
     res.json({
       radicado,
       nuevas: r.nuevas,
+      desdeCache: r.desdeCache,
       proceso: serializarProceso(proceso),
       actuaciones: proceso.actuaciones.map(serializarActuacion),
+      resumenes: await obtenerResumenes(proceso.id),
     })
   } catch (e) {
+    if (e.code === 'NO_REGISTRADO') return res.status(404).json({ error: e.message })
     res.status(400).json({ error: e.message })
   }
 })

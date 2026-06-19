@@ -38,6 +38,8 @@ model Proceso {
   cliente              Usuario  @relation("ClienteProcesos", fields: [clienteId], references: [id])
   jurisdiccion         String // civil | laboral | administrativo (RF-11)
   despacho             String?
+  demandantes          String? // partes demandantes (de sujetosProcesales)
+  demandados           String? // partes demandadas
   estado               String   @default("E0") // E0..E4 (modelo de estados)
   estadoLabel          String?
   ultimoEstadoConocido String? // snapshot JSON (texto) para detección por diferencia (RF-14)

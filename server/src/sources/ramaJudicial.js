@@ -25,6 +25,29 @@ function normaliza(a) {
   }
 }
 
+// Partes del proceso desde el endpoint dedicado /Proceso/Sujetos/{idProceso}.
+async function obtenerPartes(idProceso) {
+  try {
+    const url = `${BASE}/Proceso/Sujetos/${idProceso}?pagina=1`
+    const res = await fetchRetry(url, { headers })
+    const data = await res.json()
+    const dte = []
+    const ddo = []
+    for (const s of data.sujetos || []) {
+      const nombre = (s.nombreRazonSocial || '').trim()
+      if (!nombre) continue
+      if (/demandante/i.test(s.tipoSujeto)) dte.push(nombre)
+      else if (/demandado/i.test(s.tipoSujeto)) ddo.push(nombre)
+    }
+    return {
+      demandantes: dte.length ? dte.join(', ') : null,
+      demandados: ddo.length ? ddo.join(', ') : null,
+    }
+  } catch {
+    return { demandantes: null, demandados: null }
+  }
+}
+
 async function consultarPorRadicado(radicado) {
   // 1) idProceso por número de radicación.
   const urlBusqueda = `${BASE}/Procesos/Consulta/NumeroRadicacion?numero=${radicado}&SoloActivos=false&pagina=1`
@@ -35,10 +58,18 @@ async function consultarPorRadicado(radicado) {
 
   // Respetar procesos reservados/privados (confidencialidad).
   if (proc.esPrivado) {
-    return { idProceso: proc.idProceso, despacho: proc.despacho, actuaciones: [], privado: true }
+    return {
+      idProceso: proc.idProceso,
+      despacho: proc.despacho,
+      actuaciones: [],
+      privado: true,
+    }
   }
 
   const idProceso = proc.idProceso
+
+  // Partes reales (Demandante/Demandado) desde el endpoint de sujetos.
+  const partes = await obtenerPartes(idProceso)
 
   // 2) Actuaciones (paginadas; 40 por página, de la más nueva a la más vieja).
   const actuaciones = []
@@ -53,7 +84,13 @@ async function consultarPorRadicado(radicado) {
     pagina++
   } while (pagina <= totalPaginas && pagina <= MAX_PAGINAS)
 
-  return { idProceso, despacho: proc.despacho, actuaciones }
+  return {
+    idProceso,
+    despacho: proc.despacho,
+    demandantes: partes.demandantes,
+    demandados: partes.demandados,
+    actuaciones,
+  }
 }
 
 module.exports = { consultarPorRadicado }

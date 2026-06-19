@@ -8,7 +8,8 @@ const { esRadicadoValido } = require('../lib/radicado')
 const { claveDe } = require('../lib/clave')
 
 async function monitorearProceso(proceso) {
-  const { actuaciones } = await fuente.consultarPorRadicado(proceso.radicado)
+  const fuenteData = await fuente.consultarPorRadicado(proceso.radicado)
+  const actuaciones = fuenteData.actuaciones || []
 
   // Estado almacenado (línea base, RF-14).
   const existentes = await prisma.actuacion.findMany({
@@ -50,7 +51,12 @@ async function monitorearProceso(proceso) {
   }
   await prisma.proceso.update({
     where: { id: proceso.id },
-    data: { ultimoEstadoConocido: JSON.stringify(snapshot) },
+    data: {
+      ultimoEstadoConocido: JSON.stringify(snapshot),
+      ...(fuenteData.despacho ? { despacho: fuenteData.despacho } : {}),
+      ...(fuenteData.demandantes ? { demandantes: fuenteData.demandantes } : {}),
+      ...(fuenteData.demandados ? { demandados: fuenteData.demandados } : {}),
+    },
   })
 
   return { radicado: proceso.radicado, nuevas: creadas.length, detalle: creadas }
@@ -69,6 +75,30 @@ async function monitorearPorRadicado(radicado) {
   return monitorearProceso(proceso)
 }
 
+// Consulta con RESPALDO: si la fuente falla (Rama Judicial caída), devuelve el
+// último estado conocido almacenado (RF-14 / RNF-12) en vez de fallar.
+async function consultarProceso(radicado) {
+  if (!esRadicadoValido(radicado)) {
+    throw Object.assign(new Error('Radicado inválido (deben ser 23 dígitos).'), {
+      code: 'INVALIDO',
+    })
+  }
+  const proceso = await prisma.proceso.findUnique({ where: { radicado } })
+  if (!proceso) {
+    throw Object.assign(
+      new Error('Proceso no registrado (consulta a demanda, RF-10).'),
+      { code: 'NO_REGISTRADO' }
+    )
+  }
+  try {
+    const r = await monitorearProceso(proceso)
+    return { nuevas: r.nuevas, desdeCache: false }
+  } catch (e) {
+    // Fuente no disponible → seguimos con lo persistido, sin romper la consulta.
+    return { nuevas: 0, desdeCache: true, error: e.message }
+  }
+}
+
 // Monitorea todos los procesos registrados (job programado, RF-13).
 async function monitorearTodos() {
   const procesos = await prisma.proceso.findMany()
@@ -83,4 +113,9 @@ async function monitorearTodos() {
   return resultados
 }
 
-module.exports = { monitorearProceso, monitorearPorRadicado, monitorearTodos }
+module.exports = {
+  monitorearProceso,
+  monitorearPorRadicado,
+  monitorearTodos,
+  consultarProceso,
+}
