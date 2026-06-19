@@ -5,6 +5,7 @@ import {
   BarChart3,
   Mail,
   Activity,
+  Settings,
 } from 'lucide-react'
 import { MockContext } from '../context/MockContext'
 import TopBar from '../components/shared/TopBar'
@@ -12,6 +13,7 @@ import NavSidebar from '../components/shared/NavSidebar'
 import AdminPanel, { CasosTabla } from '../components/admin/AdminPanel'
 import { EstadoBars, ParticipacionDonut, ActividadLine } from '../components/admin/charts'
 import { formatFecha } from '../lib/ui'
+import ChatWidget from '../components/shared/ChatWidget'
 
 const items = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -19,6 +21,7 @@ const items = [
   { id: 'reportes', label: 'Reportes', icon: BarChart3 },
   { id: 'correos', label: 'Correos', icon: Mail },
   { id: 'actividad', label: 'Actividad', icon: Activity },
+  { id: 'config', label: 'Configuración', icon: Settings },
 ]
 
 const estados = [
@@ -161,9 +164,59 @@ export default function AdminDashboard({ onHome, onNavigate }) {
                 </Panel>
               </div>
             )}
+
+            {vista === 'config' && (
+              <div className="space-y-5">
+                <h1 className="font-sora text-3xl font-bold text-white">Configuración de Alertas</h1>
+                <p className="text-sm text-white/45">Ajusta los días de antelación para notificar vencimientos y actuaciones (RF-19).</p>
+                <div className="grid gap-5 max-w-2xl">
+                  <Panel titulo="Ventana de Antelación (Días)" subtitulo="Define cuántos días antes de un vencimiento se debe generar la alerta automática por nivel de criticidad.">
+                    <div className="space-y-4 mt-2">
+                      <div className="flex items-center justify-between border-b border-[#2A2A2A] pb-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="h-3 w-3 rounded-full bg-[#84120C]" />
+                            <span className="font-semibold text-white">Crítica</span>
+                          </div>
+                          <p className="text-[12px] text-white/40 mt-1">Audiencias, fallos, vencimiento inminente.</p>
+                        </div>
+                        <input type="number" defaultValue={5} className="w-20 rounded-xl border border-[#2C2C2C] bg-[#1A1A1A] px-3 py-2 text-sm text-white text-center focus:border-[#84120C] focus:outline-none" />
+                      </div>
+                      
+                      <div className="flex items-center justify-between border-b border-[#2A2A2A] pb-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="h-3 w-3 rounded-full bg-[#C79B2B]" />
+                            <span className="font-semibold text-white">Importante</span>
+                          </div>
+                          <p className="text-[12px] text-white/40 mt-1">Traslados, requerimientos, notificaciones.</p>
+                        </div>
+                        <input type="number" defaultValue={3} className="w-20 rounded-xl border border-[#2C2C2C] bg-[#1A1A1A] px-3 py-2 text-sm text-white text-center focus:border-[#84120C] focus:outline-none" />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="h-3 w-3 rounded-full bg-[#3A3A3A]" />
+                            <span className="font-semibold text-white">Informativa</span>
+                          </div>
+                          <p className="text-[12px] text-white/40 mt-1">Constancias, oficios, cambios de estado.</p>
+                        </div>
+                        <input type="number" defaultValue={1} className="w-20 rounded-xl border border-[#2C2C2C] bg-[#1A1A1A] px-3 py-2 text-sm text-white text-center focus:border-[#84120C] focus:outline-none" />
+                      </div>
+                    </div>
+                    
+                    <button className="mt-6 w-full rounded-xl bg-[#84120C] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#A30F0A]" onClick={() => alert('Configuración guardada exitosamente.')}>
+                      Guardar Configuración
+                    </button>
+                  </Panel>
+                </div>
+              </div>
+            )}
           </main>
         </div>
       </div>
+      <ChatWidget rol="admin" />
     </div>
   )
 }

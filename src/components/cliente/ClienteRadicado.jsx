@@ -11,9 +11,13 @@ export default function ClienteRadicado({ procesos = [], onSelect }) {
     const limpio = q.replace(/\D/g, '')
     const match =
       (limpio && procesos.find((p) => p.radicado.includes(limpio))) ||
-      procesos.find((p) => p.cliente.toLowerCase().includes(q)) ||
-      procesos[0]
-    onSelect?.(match)
+      procesos.find((p) => p.cliente.toLowerCase().includes(q))
+      
+    if (!match && limpio.length === 23) {
+      onSelect?.(limpio) // enviar radicado crudo para API
+    } else {
+      onSelect?.(match || procesos[0])
+    }
   }
 
   return (

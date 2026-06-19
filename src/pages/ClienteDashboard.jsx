@@ -5,6 +5,7 @@ import TopBar from '../components/shared/TopBar'
 import NavSidebar from '../components/shared/NavSidebar'
 import ClienteConsultaView from '../components/cliente/ClienteConsultaView'
 import ClienteHistorialView from '../components/cliente/ClienteHistorialView'
+import ChatWidget from '../components/shared/ChatWidget'
 
 const items = [
   { id: 'consulta', label: 'Consulta', icon: Search },
@@ -52,6 +53,7 @@ export default function ClienteDashboard({ onHome, onNavigate }) {
           </main>
         </div>
       </div>
+      <ChatWidget rol="cliente" procesoId={proceso?.id} />
     </div>
   )
 }
