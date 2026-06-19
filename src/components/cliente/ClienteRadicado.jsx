@@ -1,14 +1,15 @@
 import { useState } from 'react'
-import { Check } from 'lucide-react'
+import { Check, Search } from 'lucide-react'
+
 import { formatRadicado } from '../../lib/ui'
 
-// ── Búsqueda por radicado del Cliente (input + Consultar) ──
 export default function ClienteRadicado({ procesos = [], onSelect }) {
   const [valor, setValor] = useState('')
 
   const consultar = async () => {
     const q = valor.trim().toLowerCase()
     const limpio = q.replace(/\D/g, '')
+
     if (limpio && limpio.length === 23) {
       try {
         const { processService } = await import('../../services/processService')
@@ -27,45 +28,49 @@ export default function ClienteRadicado({ procesos = [], onSelect }) {
     const match =
       (limpio && procesos.find((p) => p.radicado.includes(limpio))) ||
       procesos.find((p) => p.cliente.toLowerCase().includes(q))
-      
+
     if (!match && limpio.length === 23) {
-      onSelect?.(limpio) // enviar radicado crudo para API
+      onSelect?.(limpio)
     } else {
       onSelect?.(match || procesos[0])
     }
   }
 
   return (
-    <div className="rounded-[22px] border border-[#262626] bg-[#101010] p-5">
-      <p className="mb-2 text-[12px] font-medium text-white/55">Número de radicado</p>
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <input
-          value={valor}
-          onChange={(e) => setValor(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && consultar()}
-          placeholder="Ingrese su numero de radicado"
-          className="flex-1 rounded-2xl border border-[#2C2C2C] bg-[#1A1A1A] px-4 py-3 text-sm text-white placeholder:text-white/35 focus:border-[#84120C] focus:outline-none"
-        />
+    <div className="rounded-[30px] border border-[#2A2A2A] bg-[#121212] p-6">
+      <p className="mb-4 text-[1.02rem] font-semibold text-white">Numero de radicado</p>
+
+      <div className="flex flex-col gap-4 xl:flex-row">
+        <div className="flex flex-1 items-center gap-3 rounded-2xl border border-[#333333] bg-[#141414] px-5 py-4">
+          <Search size={18} className="shrink-0 text-white/35" />
+          <input
+            value={valor}
+            onChange={(e) => setValor(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && consultar()}
+            placeholder="Ingrese su numero de radicado"
+            className="w-full bg-transparent text-[1rem] text-white placeholder:text-white/35 focus:outline-none"
+          />
+        </div>
+
         <button
           onClick={consultar}
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#84120C] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#A30F0A]"
+          className="inline-flex min-w-[190px] shrink-0 items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#7E120D] to-[#B3160E] px-6 py-4 text-[1.02rem] font-semibold text-white transition-all hover:brightness-110"
         >
           Consultar
-          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-white/90 text-[#84120C]">
-            <Check size={13} strokeWidth={3} />
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/95 text-[#8A140E]">
+            <Check size={18} strokeWidth={3} />
           </span>
         </button>
       </div>
 
       {procesos.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="text-[11px] text-white/35">Mis casos:</span>
+        <div className="mt-5 flex flex-wrap gap-2">
           {procesos.map((p) => (
             <button
               key={p.id}
               onClick={() => onSelect?.(p)}
               title={formatRadicado(p.radicado)}
-              className="rounded-full border border-[#2A2A2A] bg-[#161616] px-3 py-1.5 text-[11px] text-white/60 transition-colors hover:border-[#3A3A3A] hover:text-white"
+              className="rounded-full border border-[#2A2A2A] bg-[#171717] px-3 py-1.5 text-[11px] text-white/60 transition-colors hover:border-[#3A3A3A] hover:text-white"
             >
               {p.cliente}
             </button>

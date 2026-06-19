@@ -1,123 +1,214 @@
-import { useState, useEffect } from 'react';
-import { processService } from '../../services/processService';
-import { userService } from '../../services/userService';
+import { useEffect, useState } from 'react'
+import { PlusCircle } from 'lucide-react'
+
+import { processService } from '../../services/processService'
+import { userService } from '../../services/userService'
+
+const jurisdicciones = [
+  { value: 'civil', label: 'Civil' },
+  { value: 'laboral', label: 'Laboral' },
+  { value: 'administrativo', label: 'Administrativo' },
+]
+
+const participaciones = [
+  { value: 'DEMANDANTE', label: 'Demandante' },
+  { value: 'DEMANDADO', label: 'Demandado' },
+]
+
+const etapas = ['Apertura', 'Admitida', 'Notificacion', 'Contestacion', 'Pruebas', 'Sentencia']
+const estados = ['E1', 'E2', 'E3', 'E4']
+
+function Field({ label, children }) {
+  return (
+    <div>
+      <label className="mb-3 block text-[1rem] text-white/72">{label}</label>
+      {children}
+    </div>
+  )
+}
+
+function inputClass() {
+  return 'w-full rounded-2xl border border-[#333333] bg-[#141414] px-5 py-4 text-[1rem] text-white placeholder:text-white/35 focus:border-[#84120C] focus:outline-none'
+}
 
 export default function RegistrarProcessView() {
-  const [radicado, setRadicado] = useState('');
-  const [jurisdiccion, setJurisdiccion] = useState('civil');
-  const [tipoParticipacion, setTipoParticipacion] = useState('DEMANDANTE');
-  const [clienteId, setClienteId] = useState('');
-  const [abogadoId, setAbogadoId] = useState('');
-  const [etapa, setEtapa] = useState('Apertura');
-  const [estado, setEstado] = useState('E1');
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  
-  const [clientes, setClientes] = useState([]);
-  const [abogados, setAbogados] = useState([]);
+  const [radicado, setRadicado] = useState('')
+  const [jurisdiccion, setJurisdiccion] = useState('civil')
+  const [tipoParticipacion, setTipoParticipacion] = useState('DEMANDANTE')
+  const [clienteId, setClienteId] = useState('')
+  const [abogadoId, setAbogadoId] = useState('')
+  const [etapa, setEtapa] = useState('Apertura')
+  const [estado, setEstado] = useState('E1')
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(false)
+  const [clientes, setClientes] = useState([])
+  const [abogados, setAbogados] = useState([])
 
   useEffect(() => {
-    userService.getUsers().then(users => {
-      if(Array.isArray(users)) {
-        setClientes(users.filter(u => u.role === 'CLIENTE'));
-        setAbogados(users.filter(u => u.role === 'ABOGADO'));
-      }
-    }).catch(err => console.error(err));
-  }, []);
+    userService
+      .getUsers()
+      .then((users) => {
+        if (Array.isArray(users)) {
+          setClientes(users.filter((user) => user.role === 'CLIENTE'))
+          setAbogados(users.filter((user) => user.role === 'ABOGADO'))
+        }
+      })
+      .catch((err) => console.error(err))
+  }, [])
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(false);
-    
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setError(null)
+    setSuccess(false)
+
     if (radicado.length !== 23 || !/^\d+$/.test(radicado)) {
-      setError('El radicado debe tener exactamente 23 dígitos numéricos.');
-      return;
+      setError('El radicado debe tener exactamente 23 digitos numericos.')
+      return
     }
-    
+
     try {
       await processService.createProcess({
         radicado,
         jurisdiccion,
         tipo_participacion: tipoParticipacion,
-        cliente_id: parseInt(clienteId),
-        abogado_id: parseInt(abogadoId),
+        cliente_id: Number.parseInt(clienteId, 10),
+        abogado_id: Number.parseInt(abogadoId, 10),
         etapa,
-        estado
-      });
-      setSuccess(true);
-      setRadicado('');
+        estado,
+      })
+
+      setSuccess(true)
+      setRadicado('')
+      setClienteId('')
+      setAbogadoId('')
+      setEtapa('Apertura')
+      setEstado('E1')
     } catch (err) {
-      setError('Error al registrar proceso. Puede que el radicado ya exista.');
+      setError('Error al registrar proceso. Puede que el radicado ya exista.')
     }
-  };
+  }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
-        <h1 className="font-sora text-2xl font-bold text-white md:text-3xl">Registrar Proceso Judicial</h1>
-        <p className="mt-1 text-sm text-white/45">Ingresa los datos para registrar un nuevo proceso en el sistema.</p>
+        <h1 className="font-sora text-[3rem] font-bold leading-none text-white">
+          Registrar Proceso Judicial
+        </h1>
+        <p className="mt-4 text-[1.1rem] text-white/60">
+          Ingresa los datos para registrar un nuevo proceso en el sistema.
+        </p>
       </div>
 
-      <div className="rounded-[22px] border border-[#262626] bg-[#101010] p-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Radicado (23 dígitos)</label>
-            <input type="text" maxLength={23} className="input-field w-full" value={radicado} onChange={e => setRadicado(e.target.value)} required />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Jurisdicción</label>
-              <select className="input-field w-full" value={jurisdiccion} onChange={e => setJurisdiccion(e.target.value)}>
-                <option value="civil">Civil</option>
-                <option value="laboral">Laboral</option>
-                <option value="administrativo">Administrativo</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Tipo de Participación</label>
-              <select className="input-field w-full" value={tipoParticipacion} onChange={e => setTipoParticipacion(e.target.value)}>
-                <option value="DEMANDANTE">Demandante</option>
-                <option value="DEMANDADO">Demandado</option>
-              </select>
-            </div>
-          </div>
+      <div className="rounded-[30px] border border-[#2A2A2A] bg-[#121212] p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Field label="Radicado (23 digitos)">
+            <input
+              type="text"
+              maxLength={23}
+              value={radicado}
+              onChange={(e) => setRadicado(e.target.value)}
+              className={inputClass()}
+              required
+            />
+          </Field>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Cliente</label>
-              <select className="input-field w-full" value={clienteId} onChange={e => setClienteId(e.target.value)} required>
+          <div className="grid gap-6 xl:grid-cols-2">
+            <Field label="Jurisdiccion">
+              <select
+                value={jurisdiccion}
+                onChange={(e) => setJurisdiccion(e.target.value)}
+                className={inputClass()}
+              >
+                {jurisdicciones.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Tipo de Participacion">
+              <select
+                value={tipoParticipacion}
+                onChange={(e) => setTipoParticipacion(e.target.value)}
+                className={inputClass()}
+              >
+                {participaciones.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Cliente">
+              <select
+                value={clienteId}
+                onChange={(e) => setClienteId(e.target.value)}
+                className={inputClass()}
+                required
+              >
                 <option value="">Seleccione un cliente...</option>
-                {clientes.map(c => <option key={c.id} value={c.id}>{c.name} ({c.email})</option>)}
+                {clientes.map((cliente) => (
+                  <option key={cliente.id} value={cliente.id}>
+                    {cliente.name} ({cliente.email})
+                  </option>
+                ))}
               </select>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Abogado</label>
-              <select className="input-field w-full" value={abogadoId} onChange={e => setAbogadoId(e.target.value)} required>
+            </Field>
+
+            <Field label="Abogado">
+              <select
+                value={abogadoId}
+                onChange={(e) => setAbogadoId(e.target.value)}
+                className={inputClass()}
+                required
+              >
                 <option value="">Seleccione un abogado...</option>
-                {abogados.map(a => <option key={a.id} value={a.id}>{a.name} ({a.email})</option>)}
+                {abogados.map((abogado) => (
+                  <option key={abogado.id} value={abogado.id}>
+                    {abogado.name} ({abogado.email})
+                  </option>
+                ))}
               </select>
-            </div>
+            </Field>
+
+            <Field label="Etapa Inicial">
+              <select value={etapa} onChange={(e) => setEtapa(e.target.value)} className={inputClass()}>
+                {etapas.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Estado">
+              <select value={estado} onChange={(e) => setEstado(e.target.value)} className={inputClass()}>
+                {estados.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Etapa Inicial</label>
-              <input type="text" className="input-field w-full" value={etapa} onChange={e => setEtapa(e.target.value)} required />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Estado</label>
-              <input type="text" className="input-field w-full" value={estado} onChange={e => setEstado(e.target.value)} required />
-            </div>
+          {error && <p className="text-sm font-semibold text-[#E7A9A3]">{error}</p>}
+          {success && (
+            <p className="text-sm font-semibold text-[#CFEBC5]">Proceso registrado correctamente.</p>
+          )}
+
+          <div className="flex justify-center pt-2">
+            <button
+              type="submit"
+              className="inline-flex min-w-[290px] items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#7E120D] to-[#B3160E] px-8 py-4 text-[1.05rem] font-semibold text-white transition-all hover:brightness-110"
+            >
+              <PlusCircle size={20} /> Registrar Proceso
+            </button>
           </div>
-
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          {success && <p className="text-green-500 text-sm">Proceso registrado correctamente.</p>}
-
-          <button type="submit" className="btn-accent w-full justify-center">Registrar Proceso</button>
         </form>
       </div>
     </div>
-  );
+  )
 }
