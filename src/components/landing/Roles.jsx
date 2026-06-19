@@ -1,4 +1,4 @@
-import { UserRound, Scale, Building2 } from 'lucide-react'
+import { UserRound, Scale, Building2, ArrowRight } from 'lucide-react'
 import TiltCard from './TiltCard'
 import Reveal from './Reveal'
 
@@ -8,6 +8,7 @@ const roles = [
   {
     icon: UserRound,
     role: 'Cliente',
+    id: 'cliente',
     color: '#1A5C8A',
     tone: 'Lenguaje claro',
     text: 'Su caso avanza bien. El juez citó a una reunión formal para el 22 de junio; su asistencia es importante. Nosotros preparamos todo.',
@@ -15,6 +16,7 @@ const roles = [
   {
     icon: Scale,
     role: 'Abogado',
+    id: 'abogado',
     color: '#C5202E',
     tone: 'Técnico-jurídico',
     text: 'E2 · Apertura. Audiencia inicial art. 372 CGP fijada 22/06 09:00. Verificar poder, preparar interrogatorio y fijación de hechos. Inasistencia: consecuencias procesales.',
@@ -22,13 +24,14 @@ const roles = [
   {
     icon: Building2,
     role: 'Administración',
+    id: 'admin',
     color: '#B8621A',
     tone: 'Ejecutivo',
     text: 'Cartera: 1 audiencia crítica esta semana (Inversiones del Pacífico). Comunicación al cliente registrada y trazada. Sin términos en riesgo.',
   },
 ]
 
-export default function Roles() {
+export default function Roles({ onEnter }) {
   return (
     <section id="roles" className="mx-auto max-w-7xl px-5 py-20 md:px-8">
       <Reveal className="mx-auto max-w-2xl text-center">
@@ -51,7 +54,15 @@ export default function Roles() {
           return (
             <Reveal key={r.role} delay={i * 100}>
               <TiltCard max={8} className="h-full" innerClassName="h-full rounded-2xl">
-                <div className="relative h-full overflow-hidden rounded-2xl border border-white/[0.08] bg-hg-surface/70 p-6">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onEnter?.(r.id)}
+                  onKeyDown={(e) =>
+                    (e.key === 'Enter' || e.key === ' ') && onEnter?.(r.id)
+                  }
+                  className="group/role relative h-full cursor-pointer overflow-hidden rounded-2xl border border-white/[0.08] bg-hg-surface/70 p-6 transition-colors hover:border-white/20"
+                >
                   {/* franja de color del rol */}
                   <span
                     className="absolute inset-x-0 top-0 h-1"
@@ -78,6 +89,18 @@ export default function Roles() {
                       {r.text}
                     </p>
                   </div>
+
+                  {/* Acceso al dashboard del rol */}
+                  <span
+                    className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold transition-colors"
+                    style={{ color: r.color }}
+                  >
+                    Entrar como {r.role}
+                    <ArrowRight
+                      size={15}
+                      className="transition-transform group-hover/role:translate-x-1"
+                    />
+                  </span>
                 </div>
               </TiltCard>
             </Reveal>

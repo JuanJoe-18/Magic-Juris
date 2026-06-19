@@ -1,20 +1,50 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Landing from './pages/Landing'
 import AbogadoDashboard from './pages/AbogadoDashboard'
+import ClienteDashboard from './pages/ClienteDashboard'
+import AdminDashboard from './pages/AdminDashboard'
+import { MockProvider } from './context/MockContext'
 
-// Punto de ensamblaje de la aplicación.
-// MVP Reto 3 — landing de producto + vista del rol Abogado.
-// (Próximas vistas: Cliente y Admin.)
-export default function App() {
-  const [view, setView] = useState('landing') // 'landing' | 'abogado'
+function App() {
+  const [currentView, setCurrentView] = useState('landing')
 
-  // Vuelve al tope al cambiar de vista.
-  useEffect(() => {
-    window.scrollTo({ top: 0 })
-  }, [view])
-
-  if (view === 'abogado') {
-    return <AbogadoDashboard onHome={() => setView('landing')} />
+  const renderView = () => {
+    switch(currentView) {
+      case 'landing':
+        return <Landing onEnter={(role) => setCurrentView(typeof role === 'string' ? role : 'abogado')} />
+      case 'abogado':
+        return (
+          <AbogadoDashboard
+            onHome={() => setCurrentView('landing')}
+            onNavigate={setCurrentView}
+          />
+        )
+      case 'cliente':
+        return (
+          <ClienteDashboard
+            onHome={() => setCurrentView('landing')}
+            onNavigate={setCurrentView}
+          />
+        )
+      case 'admin':
+        return (
+          <AdminDashboard
+            onHome={() => setCurrentView('landing')}
+            onNavigate={setCurrentView}
+          />
+        )
+      default:
+        return <Landing onEnter={(role) => setCurrentView(typeof role === 'string' ? role : 'abogado')} />
+    }
   }
-  return <Landing onEnter={() => setView('abogado')} />
+
+  return (
+    <MockProvider>
+      <div className="min-h-screen bg-hg-bg text-white font-inter selection:bg-hg-red/30">
+        {renderView()}
+      </div>
+    </MockProvider>
+  )
 }
+
+export default App
