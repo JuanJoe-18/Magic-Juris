@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { CheckCircle2, Clock3, LoaderCircle } from 'lucide-react'
+import { CheckCircle2, Clock3, Loader2, LoaderCircle } from 'lucide-react'
+
 import { formatRadicado } from '../../lib/ui'
-import { resumenNatural } from './clienteUtil'
-import ClienteRadicado from './ClienteRadicado'
+import { api } from '../../lib/api'
 import { taskService } from '../../services/taskService'
+import ClienteRadicado from './ClienteRadicado'
+import { resumenNatural } from './clienteUtil'
 
 function Pregunta({ titulo, children }) {
   return (
@@ -54,11 +56,13 @@ function TaskCard({ task, onUpdate, busyTaskId }) {
 }
 
 export default function ClienteConsultaView({ procesos, proceso, onSelect }) {
-  const r = resumenNatural(proceso)
   const [tasks, setTasks] = useState([])
   const [loadingTasks, setLoadingTasks] = useState(true)
   const [taskMessage, setTaskMessage] = useState('')
   const [busyTaskId, setBusyTaskId] = useState(null)
+  const [resultadoApi, setResultadoApi] = useState(null)
+  const [cargandoApi, setCargandoApi] = useState(false)
+  const [errorApi, setErrorApi] = useState(null)
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -74,6 +78,13 @@ export default function ClienteConsultaView({ procesos, proceso, onSelect }) {
     }
     loadTasks()
   }, [])
+
+  useEffect(() => {
+    if (proceso) {
+      setResultadoApi(null)
+      setErrorApi(null)
+    }
+  }, [proceso])
 
   const handleTaskUpdate = async (taskId, status) => {
     setTaskMessage('')
@@ -93,6 +104,36 @@ export default function ClienteConsultaView({ procesos, proceso, onSelect }) {
     }
   }
 
+  const consultarExterno = async (radicado) => {
+    const limpio = radicado.replace(/\D/g, '')
+    if (limpio.length !== 23) {
+      setErrorApi('El numero de radicado debe tener 23 digitos.')
+      return
+    }
+
+    setCargandoApi(true)
+    setErrorApi(null)
+    try {
+      const data = await api.consultar(limpio)
+      const procesoApi = data?.proceso ? { ...data.proceso } : null
+      if (procesoApi && data?.resumenes?.cliente) {
+        procesoApi.resumenCliente = data.resumenes.cliente
+        procesoApi.criticidad = data.actuaciones?.[0]?.criticidad || 'Informativa'
+      }
+      setResultadoApi({ ...data, proceso: procesoApi })
+      onSelect(null)
+    } catch (error) {
+      setErrorApi('No se pudo consultar. ¿Esta encendido el backend de IA?')
+      setResultadoApi(null)
+    } finally {
+      setCargandoApi(false)
+    }
+  }
+
+  const isApi = Boolean(resultadoApi)
+  const processData = isApi ? resultadoApi?.proceso : proceso
+  const summary = resumenNatural(processData)
+
   return (
     <div className="space-y-5">
       <div>
@@ -106,9 +147,26 @@ export default function ClienteConsultaView({ procesos, proceso, onSelect }) {
 
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-5">
-          <ClienteRadicado procesos={procesos} onSelect={onSelect} />
+          <ClienteRadicado
+            procesos={procesos}
+            onSelect={(selected) => {
+              if (typeof selected === 'string') {
+                consultarExterno(selected)
+              } else {
+                onSelect(selected)
+              }
+            }}
+          />
 
-          {r && (
+          {errorApi && <p className="text-[12px] text-[#C5202E]">{errorApi}</p>}
+
+          {cargandoApi && (
+            <div className="flex items-center gap-2 text-sm text-white/50">
+              <Loader2 className="animate-spin" size={16} /> Consultando con IA (Modulo E)...
+            </div>
+          )}
+
+          {summary && !cargandoApi && (
             <div className="rounded-[22px] border border-[#262626] bg-[#101010] p-6">
               <div className="mb-5 flex items-center gap-3">
                 <h3 className="font-sora text-lg font-bold text-white">
@@ -116,21 +174,26 @@ export default function ClienteConsultaView({ procesos, proceso, onSelect }) {
                 </h3>
                 <span
                   className="rounded-full px-3 py-1 text-[12px] font-semibold text-white"
-                  style={{ backgroundColor: r.urgenciaColor }}
+                  style={{ backgroundColor: summary.urgenciaColor }}
                 >
-                  {r.urgenciaLabel}
+                  {summary.urgenciaLabel}
                 </span>
-                {proceso && (
+                {processData && (
                   <span className="ml-auto hidden font-mono text-[11px] text-white/30 sm:block">
-                    {formatRadicado(proceso.radicado)}
+                    {formatRadicado(processData.radicado)}
+                  </span>
+                )}
+                {isApi && (
+                  <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-400">
+                    Resumen Real IA
                   </span>
                 )}
               </div>
 
               <div className="space-y-5">
-                <Pregunta titulo="¿Qué pasó?">{r.quePaso}</Pregunta>
-                <Pregunta titulo="¿Qué va a pasar?">{r.queVaPasar}</Pregunta>
-                <Pregunta titulo="¿Qué debo hacer?">{r.queHacer}</Pregunta>
+                <Pregunta titulo="¿Que paso?">{summary.quePaso}</Pregunta>
+                <Pregunta titulo="¿Que va a pasar?">{summary.queVaPasar}</Pregunta>
+                <Pregunta titulo="¿Que debo hacer?">{summary.queHacer}</Pregunta>
               </div>
             </div>
           )}
@@ -139,17 +202,11 @@ export default function ClienteConsultaView({ procesos, proceso, onSelect }) {
         <div className="rounded-[22px] border border-[#262626] bg-[#101010] p-5">
           <div className="flex items-center gap-2">
             <Clock3 size={17} className="text-white/60" />
-            <h3 className="font-sora text-lg font-bold text-white">
-              Tareas pendientes
-            </h3>
+            <h3 className="font-sora text-lg font-bold text-white">Tareas pendientes</h3>
           </div>
-          <p className="mt-1 text-[13px] text-white/45">
-            Solo ves tareas asignadas a tu usuario.
-          </p>
+          <p className="mt-1 text-[13px] text-white/45">Solo ves tareas asignadas a tu usuario.</p>
 
-          {taskMessage && (
-            <p className="mt-4 text-sm font-semibold text-[#E9D9C7]">{taskMessage}</p>
-          )}
+          {taskMessage && <p className="mt-4 text-sm font-semibold text-[#E9D9C7]">{taskMessage}</p>}
 
           <div className="mt-4 space-y-3">
             {loadingTasks ? (
@@ -166,9 +223,7 @@ export default function ClienteConsultaView({ procesos, proceso, onSelect }) {
                 />
               ))
             ) : (
-              <p className="text-sm text-white/45">
-                No tienes tareas activas en este momento.
-              </p>
+              <p className="text-sm text-white/45">No tienes tareas activas en este momento.</p>
             )}
           </div>
         </div>

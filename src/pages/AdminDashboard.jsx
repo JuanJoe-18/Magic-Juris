@@ -1,21 +1,24 @@
 import { useContext, useEffect, useState } from 'react'
 import {
-  LayoutDashboard,
-  FolderSearch,
-  BarChart3,
-  Mail,
   Activity,
+  BarChart3,
+  FolderSearch,
+  LayoutDashboard,
+  Mail,
+  Settings,
   Users,
 } from 'lucide-react'
+
+import { useAuth } from '../context/AuthContext'
 import { MockContext } from '../context/MockContext'
-import TopBar from '../components/shared/TopBar'
-import NavSidebar from '../components/shared/NavSidebar'
+import UserManagementPanel from '../components/admin/UserManagementPanel'
 import AdminPanel, { CasosTabla } from '../components/admin/AdminPanel'
-import { EstadoBars, ParticipacionDonut, ActividadLine } from '../components/admin/charts'
+import { ActividadLine, EstadoBars, ParticipacionDonut } from '../components/admin/charts'
+import ChatWidget from '../components/shared/ChatWidget'
+import NavSidebar from '../components/shared/NavSidebar'
+import TopBar from '../components/shared/TopBar'
 import { formatFecha } from '../lib/ui'
 import { taskService } from '../services/taskService'
-import UserManagementPanel from '../components/admin/UserManagementPanel'
-import { useAuth } from '../context/AuthContext'
 
 const items = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -24,12 +27,13 @@ const items = [
   { id: 'correos', label: 'Correos', icon: Mail },
   { id: 'actividad', label: 'Actividad', icon: Activity },
   { id: 'usuarios', label: 'Usuarios', icon: Users },
+  { id: 'config', label: 'Configuracion', icon: Settings },
 ]
 
 const estados = [
   { label: 'Admitida', value: 42, color: '#84120C' },
-  { label: 'Notificación', value: 35, color: '#A02A1E' },
-  { label: 'Contestación', value: 27, color: '#C79B2B' },
+  { label: 'Notificacion', value: 35, color: '#A02A1E' },
+  { label: 'Contestacion', value: 27, color: '#C79B2B' },
   { label: 'Pruebas', value: 18, color: '#3E78C2' },
   { label: 'Sentencia', value: 6, color: '#3FA66B' },
 ]
@@ -38,13 +42,12 @@ function Panel({ titulo, subtitulo, children }) {
   return (
     <div className="rounded-[22px] border border-[#262626] bg-[#141414] p-5">
       <h3 className="font-sora text-xl font-bold text-white">{titulo}</h3>
-      {subtitulo && <p className="mt-1 mb-4 text-[13px] text-white/45">{subtitulo}</p>}
+      {subtitulo && <p className="mb-4 mt-1 text-[13px] text-white/45">{subtitulo}</p>}
       {children}
     </div>
   )
 }
 
-// ── Vista del Administrador: Dashboard · Casos · Reportes · Correos · Actividad ──
 export default function AdminDashboard({ onHome, onNavigate }) {
   const { procesos } = useContext(MockContext)
   const { user } = useAuth()
@@ -111,9 +114,7 @@ export default function AdminDashboard({ onHome, onNavigate }) {
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-white/45">
-                        Aun no hay tareas activas registradas.
-                      </p>
+                      <p className="text-sm text-white/45">Aun no hay tareas activas registradas.</p>
                     )}
                   </div>
                 </Panel>
@@ -132,16 +133,10 @@ export default function AdminDashboard({ onHome, onNavigate }) {
               <div className="space-y-5">
                 <h1 className="font-sora text-3xl font-bold text-white">Reportes</h1>
                 <div className="grid gap-5 lg:grid-cols-2">
-                  <Panel
-                    titulo="Estado de los procesos"
-                    subtitulo="Distribución por etapa procesal."
-                  >
+                  <Panel titulo="Estado de los procesos" subtitulo="Distribucion por etapa procesal.">
                     <EstadoBars data={estados} />
                   </Panel>
-                  <Panel
-                    titulo="Tipo de participación"
-                    subtitulo="Demandante vs. demandado."
-                  >
+                  <Panel titulo="Tipo de participacion" subtitulo="Demandante vs. demandado.">
                     <ParticipacionDonut
                       total={128}
                       segmentos={[
@@ -156,9 +151,7 @@ export default function AdminDashboard({ onHome, onNavigate }) {
 
             {vista === 'correos' && (
               <div className="space-y-5">
-                <h1 className="font-sora text-3xl font-bold text-white">
-                  Correos enviados
-                </h1>
+                <h1 className="font-sora text-3xl font-bold text-white">Correos enviados</h1>
                 <Panel
                   titulo="Registro de comunicaciones"
                   subtitulo="Cada resumen enviado al cliente queda guardado con fecha (trazabilidad)."
@@ -174,11 +167,9 @@ export default function AdminDashboard({ onHome, onNavigate }) {
                           className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#262626] bg-[#161616] px-4 py-3"
                         >
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-white">
-                              {p.cliente}
-                            </p>
+                            <p className="truncate text-sm font-semibold text-white">{p.cliente}</p>
                             <p className="text-[12px] text-white/45">
-                              Resumen IA · {ult?.titulo ?? 'Actualización'}
+                              Resumen IA · {ult?.titulo ?? 'Actualizacion'}
                             </p>
                           </div>
                           <div className="flex items-center gap-3">
@@ -199,25 +190,99 @@ export default function AdminDashboard({ onHome, onNavigate }) {
 
             {vista === 'actividad' && (
               <div className="space-y-5">
-                <h1 className="font-sora text-3xl font-bold text-white">
-                  Actividad semanal
-                </h1>
+                <h1 className="font-sora text-3xl font-bold text-white">Actividad semanal</h1>
                 <Panel
                   titulo="Actuaciones detectadas por semana"
                   subtitulo="Volumen de actuaciones monitoreadas en la Rama Judicial."
                 >
-                  <ActividadLine
-                    valores={[8, 14, 11, 20, 28]}
-                    etiquetas={['S1', 'S2', 'S3', 'S4', 'S5']}
-                  />
+                  <ActividadLine valores={[8, 14, 11, 20, 28]} etiquetas={['S1', 'S2', 'S3', 'S4', 'S5']} />
                 </Panel>
               </div>
             )}
 
             {vista === 'usuarios' && <UserManagementPanel />}
+
+            {vista === 'config' && (
+              <div className="space-y-5">
+                <h1 className="font-sora text-3xl font-bold text-white">
+                  Configuracion de Alertas
+                </h1>
+                <p className="text-sm text-white/45">
+                  Ajusta los dias de antelacion para notificar vencimientos y actuaciones.
+                </p>
+                <div className="grid max-w-2xl gap-5">
+                  <Panel
+                    titulo="Ventana de Antelacion (Dias)"
+                    subtitulo="Define cuantos dias antes de un vencimiento se debe generar la alerta automatica por nivel de criticidad."
+                  >
+                    <div className="mt-2 space-y-4">
+                      <div className="flex items-center justify-between border-b border-[#2A2A2A] pb-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="h-3 w-3 rounded-full bg-[#84120C]" />
+                            <span className="font-semibold text-white">Critica</span>
+                          </div>
+                          <p className="mt-1 text-[12px] text-white/40">
+                            Audiencias, fallos, vencimiento inminente.
+                          </p>
+                        </div>
+                        <input
+                          type="number"
+                          defaultValue={5}
+                          className="w-20 rounded-xl border border-[#2C2C2C] bg-[#1A1A1A] px-3 py-2 text-center text-sm text-white focus:border-[#84120C] focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between border-b border-[#2A2A2A] pb-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="h-3 w-3 rounded-full bg-[#C79B2B]" />
+                            <span className="font-semibold text-white">Importante</span>
+                          </div>
+                          <p className="mt-1 text-[12px] text-white/40">
+                            Traslados, requerimientos, notificaciones.
+                          </p>
+                        </div>
+                        <input
+                          type="number"
+                          defaultValue={3}
+                          className="w-20 rounded-xl border border-[#2C2C2C] bg-[#1A1A1A] px-3 py-2 text-center text-sm text-white focus:border-[#84120C] focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="h-3 w-3 rounded-full bg-[#3A3A3A]" />
+                            <span className="font-semibold text-white">Informativa</span>
+                          </div>
+                          <p className="mt-1 text-[12px] text-white/40">
+                            Constancias, oficios, cambios de estado.
+                          </p>
+                        </div>
+                        <input
+                          type="number"
+                          defaultValue={1}
+                          className="w-20 rounded-xl border border-[#2C2C2C] bg-[#1A1A1A] px-3 py-2 text-center text-sm text-white focus:border-[#84120C] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      className="mt-6 w-full rounded-xl bg-[#84120C] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#A30F0A]"
+                      onClick={() => alert('Configuracion guardada exitosamente.')}
+                    >
+                      Guardar Configuracion
+                    </button>
+                  </Panel>
+                </div>
+              </div>
+            )}
           </main>
         </div>
       </div>
+
+      <ChatWidget rol="admin" />
     </div>
   )
 }

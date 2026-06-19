@@ -1,4 +1,4 @@
-import { ChevronDown, User } from 'lucide-react'
+import { ChevronDown, User, UserCheck, Users, Bot, BookOpen } from 'lucide-react'
 import {
   criticidadConfig,
   jurisdiccionConfig,
@@ -6,7 +6,6 @@ import {
 } from '../lib/ui'
 
 // ── Badge 3D de criticidad ──
-// Crítica: rojo pulsante · Importante: ámbar · Informativa: azul.
 function CriticidadBadge({ criticidad }) {
   const cfg = criticidadConfig[criticidad] ?? criticidadConfig.Informativa
   const isCritica = criticidad === 'Critica'
@@ -26,6 +25,28 @@ function CriticidadBadge({ criticidad }) {
   )
 }
 
+// ── Badge de sujeto procesal (Master Prompt) ──
+const parteConfig = {
+  Demandante: { label: 'Demandante', icon: UserCheck, color: '#22d3ee' },
+  Demandado:  { label: 'Demandado',  icon: User,      color: '#fb923c' },
+  Ambos:      { label: 'Ambos',      icon: Users,     color: '#a78bfa' },
+}
+
+function ParteBadge({ parte }) {
+  if (!parte) return null
+  const cfg = parteConfig[parte] || parteConfig.Ambos
+  const Icon = cfg.icon
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider border"
+      style={{ borderColor: `${cfg.color}40`, color: cfg.color, backgroundColor: `${cfg.color}10` }}
+    >
+      <Icon size={11} />
+      {cfg.label}
+    </span>
+  )
+}
+
 // ── Tarjeta de proceso judicial ──
 export default function ProcessCard({ proceso, seleccionado, onSelect }) {
   const jur = jurisdiccionConfig[proceso.jurisdiccion] ?? {
@@ -34,6 +55,12 @@ export default function ProcessCard({ proceso, seleccionado, onSelect }) {
     color: '#9CA3AF',
   }
   const JurIcon = jur.icon
+
+  // Extraer parte y motivo de la última actuación en lineaTiempo
+  const ultimaAct = proceso.lineaTiempo?.[proceso.lineaTiempo.length - 1]
+  const parte = ultimaAct?.parte
+  const motivo = ultimaAct?.motivo
+  const clasificadoPor = ultimaAct?.clasificadoPor
 
   return (
     <button
@@ -67,7 +94,7 @@ export default function ProcessCard({ proceso, seleccionado, onSelect }) {
         <p className="truncate font-medium text-white">{proceso.cliente}</p>
       </div>
 
-      {/* Meta: jurisdicción · estado · abogado */}
+      {/* Meta: jurisdicción · estado · sujeto procesal */}
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/[0.04] px-2.5 py-1 text-white/70">
           <JurIcon size={13} style={{ color: jur.color }} />
@@ -79,14 +106,25 @@ export default function ProcessCard({ proceso, seleccionado, onSelect }) {
           </span>
           {proceso.estadoLabel}
         </span>
+        <ParteBadge parte={parte} />
       </div>
 
-      {/* Última actuación */}
+      {/* Última actuación + motivo IA */}
       <div className="border-t border-white/[0.06] pt-3">
         <p className="text-[11px] uppercase tracking-wider text-white/40">
           Última actuación
         </p>
         <p className="text-sm text-white/80">{proceso.ultimaActuacion}</p>
+        {motivo && (
+          <div className="mt-1.5 flex items-center gap-1.5">
+            {clasificadoPor === 'gemini' ? (
+              <Bot size={11} className="text-emerald-400/70" />
+            ) : (
+              <BookOpen size={11} className="text-white/30" />
+            )}
+            <span className="text-[10px] text-white/40 italic">{motivo}</span>
+          </div>
+        )}
       </div>
 
       {/* Pie: abogado + indicador de expansión */}
