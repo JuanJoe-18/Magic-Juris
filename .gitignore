@@ -9,3 +9,13 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# Python backend
+backend/__pycache__/
+backend/**/*.pyc
+backend/venv/
+backend/.venv/
+backend/.env
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
