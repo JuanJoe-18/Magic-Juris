@@ -5,6 +5,7 @@ import AbogadoHeader from '../components/abogado/AbogadoHeader'
 import ConsultaView from '../components/abogado/ConsultaView'
 import HistorialView from '../components/abogado/HistorialView'
 import AsignarView from '../components/abogado/AsignarView'
+import ChatWidget from '../components/shared/ChatWidget'
 
 // Encabezado por vista (texto del header superior).
 const headerPorVista = {
@@ -75,6 +76,7 @@ export default function AbogadoDashboard({ onHome, onNavigate }) {
           </main>
         </div>
       </div>
+      <ChatWidget rol="abogado" procesoId={proceso?.id} />
     </div>
   )
 }

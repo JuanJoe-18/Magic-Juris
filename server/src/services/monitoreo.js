@@ -3,9 +3,11 @@
 // estable) y persiste solo las nuevas, actualizando el último estado conocido.
 const prisma = require('../db')
 const { fuente, FUENTE } = require('../sources')
-const { clasificarActuacion } = require('./clasificacion')
+const { clasificarLote } = require('./clasificacion')
+const { anonimizar } = require('../lib/anonimizar')
 const { esRadicadoValido } = require('../lib/radicado')
 const { claveDe } = require('../lib/clave')
+const { generarYGuardarResumenes } = require('./generadorResumenes')
 
 async function monitorearProceso(proceso) {
   const fuenteData = await fuente.consultarPorRadicado(proceso.radicado)
@@ -21,9 +23,20 @@ async function monitorearProceso(proceso) {
   // Diferencia: lo que está en la fuente y no en la base (RF-15).
   const nuevas = actuaciones.filter((a) => !yaVistas.has(claveDe(a)))
 
+  // Clasificación (RF-18/20). Anonimizamos la anotación antes de la IA (RF-25);
+  // lo almacenado conserva el texto original.
+  const nombres = [proceso.demandantes, proceso.demandados].filter(Boolean)
+  const entrada = nuevas.map((a) => ({
+    tipo: a.tipo,
+    titulo: a.titulo,
+    descripcion: anonimizar(a.descripcion, nombres),
+  }))
+  const clases = await clasificarLote(entrada)
+
   const creadas = []
-  for (const a of nuevas) {
-    const { criticidad, estado } = clasificarActuacion(a) // stub Módulo D
+  for (let i = 0; i < nuevas.length; i++) {
+    const a = nuevas[i]
+    const c = clases[i] || { criticidad: 'Informativa', estado: 'E1' }
     const creada = await prisma.actuacion.create({
       data: {
         procesoId: proceso.id,
@@ -31,14 +44,21 @@ async function monitorearProceso(proceso) {
         tipo: a.tipo || 'Actuación',
         titulo: a.titulo,
         descripcion: a.descripcion || '',
-        criticidad,
-        estado,
+        criticidad: c.criticidad,
+        estado: c.estado,
         documento: a.documento || null,
         claveFuente: claveDe(a),
+        clasificadoPor: c.fuente || null,
+        parte: c.parte || null,
+        confianza: c.confianza ?? null,
+        motivo: c.motivo || null,
         // detectadaEn = now() por defecto (RF-16)
       },
     })
     creadas.push(creada)
+
+    // RF-21/22/25: Generar resúmenes por rol (asíncrono/fire-and-forget para no bloquear)
+    generarYGuardarResumenes(creada, entrada[i].descripcion).catch(console.error)
   }
 
   // Actualizar último estado conocido (RF-14) — toma la actuación más reciente.

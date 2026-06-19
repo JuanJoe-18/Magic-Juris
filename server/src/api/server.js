@@ -6,6 +6,7 @@ const cors = require('cors')
 const prisma = require('../db')
 const { consultarProceso } = require('../services/monitoreo')
 const { normalizarRadicado } = require('../lib/radicado')
+const { procesarChat } = require('../services/chatbot')
 
 const app = express()
 app.use(cors())
@@ -20,6 +21,9 @@ function serializarActuacion(a) {
     descripcion: a.descripcion,
     criticidad: a.criticidad,
     estado: a.estado,
+    parte: a.parte,
+    motivo: a.motivo,
+    clasificadoPor: a.clasificadoPor,
     documento: a.documento,
     detectadaEn: a.detectadaEn,
   }
@@ -113,6 +117,18 @@ app.post('/api/procesos/:radicado/consultar', async (req, res) => {
   } catch (e) {
     if (e.code === 'NO_REGISTRADO') return res.status(404).json({ error: e.message })
     res.status(400).json({ error: e.message })
+  }
+})
+
+// Chatbot endpoint multi-rol (MVP)
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { mensaje, historial, procesoId, rol } = req.body
+    if (!mensaje) return res.status(400).json({ error: 'Mensaje es requerido' })
+    const respuesta = await procesarChat(mensaje, historial || [], procesoId, rol)
+    res.json({ respuesta })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
   }
 })
 

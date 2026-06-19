@@ -3,6 +3,7 @@ import {
   ChevronDown,
   ArrowDownWideNarrow,
   UserRound,
+  Users,
   Shield,
   FileText,
   Search,
@@ -18,8 +19,8 @@ import { api } from '../../lib/api'
 function ActuacionCard({ act }) {
   const [abierto, setAbierto] = useState(false)
   const c = clase(act.criticidad)
-  const esDemandado = ['Radicacion', 'Traslado', 'Prueba'].includes(act.tipo)
-  const ParteIcon = esDemandado ? Shield : UserRound
+  const ParteIcon =
+    act.parte === 'Demandado' ? Shield : act.parte === 'Ambos' ? Users : UserRound
   const doc = act.documento || nombreDocumento(act)
 
   return (
@@ -43,7 +44,7 @@ function ActuacionCard({ act }) {
         </div>
 
         <div className="flex shrink-0 flex-col items-center gap-3">
-          <span title={c.nivel}>
+          <span title={`${c.nivel}${act.parte ? ' · ' + act.parte : ''}`}>
             <ParteIcon size={18} style={{ color: c.color }} />
           </span>
           <button
@@ -70,6 +71,24 @@ function ActuacionCard({ act }) {
           <span className="rounded-full bg-[#202020] px-2.5 py-1 text-white/60">
             Estado {act.estado}
           </span>
+          {act.parte && (
+            <span className="rounded-full bg-[#202020] px-2.5 py-1 text-white/60">
+              Afecta: {act.parte}
+            </span>
+          )}
+          {act.motivo && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#202020] px-2.5 py-1 text-white/50 italic">
+              {act.clasificadoPor === 'gemini' ? (
+                <Sparkles size={10} className="text-[#C79B2B]" />
+              ) : (
+                <FileText size={10} />
+              )}
+              {act.motivo}
+              <span className="ml-1 text-white/30">
+                ({act.clasificadoPor === 'gemini' ? 'IA' : 'Reglas'})
+              </span>
+            </span>
+          )}
           {doc !== 'Sin documento asociado' && (
             <span className="inline-flex items-center gap-1 rounded-full bg-[#202020] px-2.5 py-1 text-white/60">
               <FileText size={12} /> {doc}
