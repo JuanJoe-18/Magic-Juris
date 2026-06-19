@@ -43,7 +43,7 @@ export default function Landing({ onEnter }) {
         <Stats />
         <Features />
         <HowItWorks />
-        <Roles />
+        <Roles onEnter={onEnter} />
         <Security />
         <CTA onEnter={onEnter} />
       </main>

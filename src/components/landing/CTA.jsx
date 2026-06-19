@@ -28,19 +28,27 @@ export default function CTA({ onEnter }) {
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <button
-              onClick={onEnter}
-              className="group inline-flex items-center gap-2 rounded-xl bg-hg-red px-7 py-4 font-semibold text-white anim-glow transition-transform hover:scale-[1.02]"
+              onClick={() => onEnter('abogado')}
+              className="group inline-flex items-center gap-2 rounded-xl bg-hg-red px-6 py-3 font-semibold text-white anim-glow transition-transform hover:scale-[1.02]"
             >
               <Gavel size={18} />
-              Entrar al demo
-              <ArrowRight
-                size={18}
-                className="transition-transform group-hover:translate-x-1"
-              />
+              Abogado
             </button>
-            <span className="text-xs text-white/40">
-              Sin registro · datos ficticios
-            </span>
+            <button
+              onClick={() => onEnter('cliente')}
+              className="group inline-flex items-center gap-2 rounded-xl bg-[#1A5C8A] px-6 py-3 font-semibold text-white anim-glow transition-transform hover:scale-[1.02] shadow-[0_0_24px_rgba(26,92,138,0.4)]"
+            >
+              Cliente
+            </button>
+            <button
+              onClick={() => onEnter('admin')}
+              className="group inline-flex items-center gap-2 rounded-xl bg-[#B8621A] px-6 py-3 font-semibold text-white anim-glow transition-transform hover:scale-[1.02] shadow-[0_0_24px_rgba(184,98,26,0.4)]"
+            >
+              Administrador
+            </button>
+          </div>
+          <div className="mt-4 text-xs text-white/40">
+            Sin registro · Selecciona el rol para iniciar la demo
           </div>
         </div>
       </Reveal>
