@@ -35,7 +35,12 @@ async function consultarPorRadicado(radicado) {
     actuaciones.push({ ...nov, claveFuente: claveDerivada(nov) })
   }
 
-  return { idProceso: `SIM-${radicado.slice(-5)}`, despacho: p.despacho, actuaciones }
+  // No inventamos partes: demandante/demandado solo provienen de la fuente real.
+  return {
+    idProceso: `SIM-${radicado.slice(-5)}`,
+    despacho: p.despacho,
+    actuaciones,
+  }
 }
 
 module.exports = { consultarPorRadicado }

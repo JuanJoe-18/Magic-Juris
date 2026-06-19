@@ -89,6 +89,7 @@ async function main() {
         clienteId: cliente.id,
         jurisdiccion: p.jurisdiccion,
         despacho: p.despacho,
+        // Partes (demandante/demandado) NO se inventan: las llena la consulta real.
         estado: p.estado,
         estadoLabel: p.estadoLabel,
         creadoPorId: abogado.id,
@@ -155,6 +156,35 @@ async function main() {
       })
     }
   }
+
+  // ── Proceso REAL registrado (radicado existente en la Rama Judicial) ──
+  // Permite consultar partes y actuaciones reales con FUENTE_JUDICIAL="real".
+  // Las partes NO se siembran: las obtiene la consulta a la Rama Judicial.
+  const clienteReal = await prisma.usuario.create({
+    data: {
+      nombre: 'Cliente Demo (caso real)',
+      email: 'casoreal@correo.com',
+      passwordHash: 'demo',
+      rol: 'cliente',
+    },
+  })
+  await prisma.proceso.create({
+    data: {
+      radicado: '76001310300220230012600',
+      clienteId: clienteReal.id,
+      jurisdiccion: 'civil',
+      estado: 'E0',
+      estadoLabel: 'Registrado',
+      creadoPorId: abogado.id,
+      abogados: { create: [{ abogadoId: abogado.id }] },
+      tratamiento: {
+        create: {
+          finalidad: 'Seguimiento judicial y atención proactiva al cliente',
+          baseLegitimacion: 'poder',
+        },
+      },
+    },
+  })
 
   const totales = {
     usuarios: await prisma.usuario.count(),
