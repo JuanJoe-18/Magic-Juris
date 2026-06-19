@@ -8,11 +8,14 @@ export const apiClient = {
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const response = await fetch(`${config.apiUrl}${endpoint}`, { headers });
-      if (!response.ok) throw new Error('API Error');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${response.status}`);
+      }
       return await response.json();
     } catch (error) {
-      console.warn(`[Fallback] Mock GET ${endpoint}`);
-      return { _mock: true };
+      console.error(`API GET ${endpoint}:`, error.message);
+      throw error;
     }
   },
   post: async (endpoint, data) => {
@@ -26,11 +29,76 @@ export const apiClient = {
         headers,
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('API Error');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${response.status}`);
+      }
       return await response.json();
     } catch (error) {
-      console.warn(`[Fallback] Mock POST ${endpoint}`, data);
-      return { _mock: true };
+      console.error(`API POST ${endpoint}:`, error.message);
+      throw error;
+    }
+  },
+  put: async (endpoint, data) => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(`${config.apiUrl}${endpoint}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`API PUT ${endpoint}:`, error.message);
+      throw error;
+    }
+  },
+  patch: async (endpoint, data) => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(`${config.apiUrl}${endpoint}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`API PATCH ${endpoint}:`, error.message);
+      throw error;
+    }
+  },
+  delete: async (endpoint) => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(`${config.apiUrl}${endpoint}`, {
+        method: 'DELETE',
+        headers,
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`API DELETE ${endpoint}:`, error.message);
+      throw error;
     }
   }
 };

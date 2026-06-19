@@ -19,24 +19,18 @@ export default function AbogadoHeader({
         title="Volver al inicio"
         className="flex items-center gap-3 text-left transition-opacity hover:opacity-80"
       >
-        <span className="relative font-sora text-3xl font-extrabold leading-none tracking-tight text-white">
-          HG
-          <span className="absolute left-0 top-1/2 h-[3px] w-full -translate-y-1/2 -rotate-12 rounded bg-[#C5202E]" />
-        </span>
-        <span className="hidden font-sora text-sm font-semibold uppercase leading-tight tracking-[0.12em] text-white/90 sm:block">
-          Hurtado
-          <br />
-          Gandini
+        <span className="font-sora text-xl font-bold leading-none tracking-tight text-white uppercase">
+          Hurtado Gandini
         </span>
       </button>
 
       {/* Título central */}
       <div className="min-w-0 flex-1 text-center">
-        <p className="text-[12px] font-medium tracking-wide text-white/45">
-          {subtitulo ?? 'Sistema de seguimiento judicial'}
+        <p className="text-[12px] font-medium tracking-wide text-hg-gray">
+          Sistema de seguimiento judicial
         </p>
         <h2 className="truncate font-sora text-base font-bold text-white md:text-lg">
-          {titulo}
+          Powered by MagicJuris
         </h2>
       </div>
 

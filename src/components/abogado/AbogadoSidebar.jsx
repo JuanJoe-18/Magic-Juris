@@ -1,4 +1,4 @@
-import { Search, History, ClipboardList } from 'lucide-react'
+import { Search, History, ClipboardList, PlusCircle } from 'lucide-react'
 
 // ── Sidebar de la vista del Abogado (diseño Fajardo) ──
 // Tres secciones: Consulta · Historial · Asignar tareas cliente.
@@ -6,6 +6,7 @@ const items = [
   { id: 'consulta', label: 'Consulta', icon: Search },
   { id: 'historial', label: 'Historial', icon: History },
   { id: 'asignar', label: 'Asignar tareas cliente', icon: ClipboardList },
+  { id: 'registrar', label: 'Registrar Proceso', icon: PlusCircle },
 ]
 
 export default function AbogadoSidebar({ vista, setVista }) {

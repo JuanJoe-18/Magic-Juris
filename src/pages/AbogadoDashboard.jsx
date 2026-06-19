@@ -5,6 +5,7 @@ import AbogadoHeader from '../components/abogado/AbogadoHeader'
 import ConsultaView from '../components/abogado/ConsultaView'
 import HistorialView from '../components/abogado/HistorialView'
 import AsignarView from '../components/abogado/AsignarView'
+import RegistrarProcessView from '../components/abogado/RegistrarProcessView'
 
 // Encabezado por vista (texto del header superior).
 const headerPorVista = {
@@ -20,6 +21,10 @@ const headerPorVista = {
   asignar: {
     titulo: 'Asignar Acción al caso',
     subtitulo: 'Sistema de seguimiento judicial',
+  },
+  registrar: {
+    titulo: 'Registrar nuevo proceso',
+    subtitulo: 'Ingresar datos al sistema',
   },
 }
 
@@ -71,6 +76,9 @@ export default function AbogadoDashboard({ onHome, onNavigate }) {
                 proceso={proceso}
                 onSelect={setProceso}
               />
+            )}
+            {vista === 'registrar' && (
+              <RegistrarProcessView />
             )}
           </main>
         </div>

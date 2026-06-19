@@ -24,3 +24,78 @@ class LawyerProfile(Base):
     tarjeta_profesional = Column(String, nullable=True)
 
     user = relationship("User", back_populates="lawyer_profile")
+
+class Process(Base):
+    __tablename__ = "processes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    radicado = Column(String(23), unique=True, index=True)
+    jurisdiccion = Column(String)
+    tipo_participacion = Column(String) # DEMANDANTE, DEMANDADO
+    cliente_id = Column(Integer, ForeignKey("users.id"))
+    abogado_id = Column(Integer, ForeignKey("users.id"))
+    etapa = Column(String)
+    estado = Column(String)
+    fuente = Column(String)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+class JudicialActuation(Base):
+    __tablename__ = "judicial_actuations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    process_id = Column(Integer, ForeignKey("processes.id"), index=True)
+    fecha = Column(DateTime, default=datetime.datetime.utcnow)
+    tipo = Column(String) # "audiencia", "vencimiento", "fallo", etc.
+    anotacion = Column(String)
+    documento = Column(String, nullable=True)
+    clasificacion = Column(String) # ALTA, MEDIA, BAJA
+    urgencia = Column(String, nullable=True) # internal classification
+    fuente = Column(String) # "MOCK", "RAMA_JUDICIAL"
+    external_id = Column(String, nullable=True, unique=True, index=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class Alert(Base):
+    __tablename__ = "alerts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    process_id = Column(Integer, ForeignKey("processes.id"), index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    tipo = Column(String) # "actuacion", "vencimiento", "comunicacion"
+    nivel = Column(String) # ALTA, MEDIA, BAJA
+    mensaje = Column(String)
+    canal = Column(String) # "interno", "correo", "whatsapp"
+    leida = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class NotificationPreference(Base):
+    __tablename__ = "notification_preferences"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, index=True)
+    email_enabled = Column(Boolean, default=True)
+    whatsapp_enabled = Column(Boolean, default=False)
+    preferred_channel = Column(String, default="interno")
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    process_id = Column(Integer, ForeignKey("processes.id"), index=True, nullable=True)
+    action_type = Column(String) # "login", "create_process", "sync_actuations", etc.
+    description = Column(String)
+    metadata_json = Column(String, nullable=True) # JSON string
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class CommunicationHistory(Base):
+    __tablename__ = "communication_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    process_id = Column(Integer, ForeignKey("processes.id"), index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    audience = Column(String) # "cliente", "abogado", "juzgado"
+    channel = Column(String) # "email", "sms", "portal", "whatsapp"
+    message = Column(String)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+

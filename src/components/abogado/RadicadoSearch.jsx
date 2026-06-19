@@ -14,13 +14,30 @@ export default function RadicadoSearch({
 }) {
   const [valor, setValor] = useState('')
 
-  const buscar = () => {
+  const buscar = async () => {
     const q = valor.trim().toLowerCase()
     if (!q) {
       onSelect?.(procesos[0])
       return
     }
     const limpio = q.replace(/\D/g, '')
+    if (limpio && limpio.length === 23) {
+      try {
+        const { processService } = await import('../../services/processService');
+        const process = await processService.getProcessByRadicado(limpio);
+        if (process && !process._mock) {
+          // Add dummy fields for compatibility with mock ui
+          process.cliente = "Cliente (desde DB)";
+          process.lineaTiempo = [];
+          onSelect?.(process);
+          return;
+        }
+      } catch (err) {
+        console.warn("Radicado no encontrado en DB, usando mock...");
+      }
+    }
+    
+    // Fallback to mock search
     const match =
       procesos.find((p) => limpio && p.radicado.includes(limpio)) ||
       procesos.find((p) => p.cliente.toLowerCase().includes(q)) ||
