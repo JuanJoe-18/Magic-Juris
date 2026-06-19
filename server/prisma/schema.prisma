@@ -1,0 +1,152 @@
+// Esquema Prisma — MVP Reto 3 (MagicJuris · HG)
+// Motor: SQLite (gratis, sin infra). Para producción, cambiar provider a "postgresql".
+// Nota: SQLite no soporta enums ni Json en Prisma → se usan String (valores válidos en
+// los comentarios) y JSON serializado como texto.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ── Usuarios y roles (RF-01..07, RBAC) ──
+model Usuario {
+  id                 String   @id @default(cuid())
+  nombre             String
+  email              String   @unique
+  passwordHash       String // hashing real = RF-01 (módulo A, Fajardo)
+  rol                String // cliente | abogado | admin
+  tarjetaProfesional String? // solo abogado (RF-06)
+  activo             Boolean  @default(true) // desactivar cuenta (RF-03)
+  creadoEn           DateTime @default(now())
+
+  procesosTitular Proceso[]          @relation("ClienteProcesos")
+  procesosCreados Proceso[]          @relation("CreadorProcesos")
+  asignaciones    ProcesoAbogado[]
+  lecturas        LecturaActuacion[]
+  solicitudes     SolicitudHabeas[]
+}
+
+// ── Proceso judicial (RF-08, RF-10, RF-11, RF-14) ──
+model Proceso {
+  id                   String   @id @default(cuid())
+  radicado             String   @unique // 23 dígitos, validar formato (RF-09)
+  clienteId            String
+  cliente              Usuario  @relation("ClienteProcesos", fields: [clienteId], references: [id])
+  jurisdiccion         String // civil | laboral | administrativo (RF-11)
+  despacho             String?
+  estado               String   @default("E0") // E0..E4 (modelo de estados)
+  estadoLabel          String?
+  ultimoEstadoConocido String? // snapshot JSON (texto) para detección por diferencia (RF-14)
+  creadoPorId          String?
+  creadoPor            Usuario? @relation("CreadorProcesos", fields: [creadoPorId], references: [id])
+  creadoEn             DateTime @default(now())
+
+  abogados       ProcesoAbogado[]
+  actuaciones    Actuacion[]
+  comunicaciones Comunicacion[]
+  tratamiento    TratamientoDatos?
+}
+
+// ── Asignación abogado ↔ proceso (RF-07, N:M) ──
+model ProcesoAbogado {
+  procesoId String
+  abogadoId String
+  proceso   Proceso @relation(fields: [procesoId], references: [id])
+  abogado   Usuario @relation(fields: [abogadoId], references: [id])
+
+  @@id([procesoId, abogadoId])
+}
+
+// ── Actuación detectada (RF-15, RF-16, RF-17, RF-18, RF-20) ──
+model Actuacion {
+  id          String   @id @default(cuid())
+  procesoId   String
+  proceso     Proceso  @relation(fields: [procesoId], references: [id])
+  fecha       DateTime // fecha en el expediente
+  tipo        String
+  titulo      String
+  descripcion String
+  criticidad  String // Critica | Importante | Informativa (RF-18)
+  estado      String // etapa E0..E4 mapeada (RF-20)
+  documento   String?
+  claveFuente String? // id estable de la fuente (idRegActuacion real o derivada) — dedup RF-15
+  detectadaEn DateTime @default(now()) // momento de detección (RF-16)
+
+  resumenes Resumen[]
+  lecturas  LecturaActuacion[]
+
+  @@index([procesoId, detectadaEn])
+  @@index([procesoId, claveFuente])
+}
+
+// ── Resumen generado por IA por rol (RF-21..25) ──
+model Resumen {
+  id          String    @id @default(cuid())
+  actuacionId String
+  actuacion   Actuacion @relation(fields: [actuacionId], references: [id])
+  rolDestino  String // cliente | abogado | admin
+  contenido   String
+  anonimizado Boolean   @default(false) // datos de terceros seudonimizados antes de IA (RF-25)
+  modelo      String? // LLM usado (trazabilidad)
+  generadoEn  DateTime  @default(now())
+
+  comunicaciones Comunicacion[]
+}
+
+// ── Historial de comunicaciones (RF-30..34) — append-only ──
+model Comunicacion {
+  id           String   @id @default(cuid())
+  procesoId    String
+  proceso      Proceso  @relation(fields: [procesoId], references: [id])
+  resumenId    String?
+  resumen      Resumen? @relation(fields: [resumenId], references: [id])
+  destinatario String
+  canal        String // correo | whatsapp | dashboard (RF-27)
+  estado       String   @default("enviado") // enviado | entregado | visto
+  enviadoEn    DateTime @default(now())
+  hashPrev     String? // encadenamiento para inalterabilidad (RF-34)
+
+  @@index([procesoId, enviadoEn])
+}
+
+// ── Configuración de criticidad del admin (RF-19, RF-29) ──
+model ConfigCriticidad {
+  nivel          String @id // Critica | Importante | Informativa
+  antelacionDias Int
+  canalDefault   String // correo | whatsapp | dashboard
+}
+
+// ── Trazabilidad de lectura (RF-32) ──
+model LecturaActuacion {
+  id          String    @id @default(cuid())
+  usuarioId   String
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id])
+  actuacionId String
+  actuacion   Actuacion @relation(fields: [actuacionId], references: [id])
+  vistoEn     DateTime  @default(now())
+}
+
+// ── Tratamiento de datos / base legal por proceso (RF-35, RF-37, RF-38) ──
+model TratamientoDatos {
+  id               String  @id @default(cuid())
+  procesoId        String  @unique
+  proceso          Proceso @relation(fields: [procesoId], references: [id])
+  finalidad        String // RF-35
+  baseLegitimacion String // poder | consentimiento (RF-38)
+  evidencia        String?
+}
+
+// ── Solicitudes Habeas Data / derechos ARCO (RF-36) ──
+model SolicitudHabeas {
+  id         String    @id @default(cuid())
+  titularId  String
+  titular    Usuario   @relation(fields: [titularId], references: [id])
+  tipo       String // acceso | rectificacion | supresion
+  estado     String    @default("pendiente") // pendiente | resuelta
+  creadoEn   DateTime  @default(now())
+  resueltoEn DateTime?
+}

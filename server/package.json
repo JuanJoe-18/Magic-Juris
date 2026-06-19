@@ -1,0 +1,26 @@
+{
+  "name": "magicjuris-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Backend MVP — Reto 3 MagicJuris (HG). Node + Express + Prisma + SQLite.",
+  "scripts": {
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "seed": "node prisma/seed.js",
+    "studio": "prisma studio",
+    "probar:fuente": "node src/jobs/probarFuente.js",
+    "monitor": "node src/jobs/monitor.js",
+    "monitor:all": "node src/jobs/monitor.js --all",
+    "monitor:watch": "node src/jobs/monitor.js --watch"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  }
+}
