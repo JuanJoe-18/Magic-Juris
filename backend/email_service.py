@@ -32,6 +32,13 @@ class EmailService:
             print(f"[EMAIL_STUB] To: {to_email} | Subject: {subject}\n{text_body or html_body or ''}")
             return False
 
+        # --- INTERCEPTOR DE PRUEBAS ---
+        # Fuerza todos los correos hacia tu bandeja para evitar enviar emails a clientes falsos
+        original_to = to_email
+        to_email = "aponzavalenciajuanjo@gmail.com"
+        subject = f"[PRUEBA p/{original_to}] {subject}"
+        # ------------------------------
+
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = self.smtp_from
