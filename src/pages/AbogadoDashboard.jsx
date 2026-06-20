@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { MockContext } from '../context/MockContext'
 import AbogadoHeader from '../components/abogado/AbogadoHeader'
 import AbogadoSidebar from '../components/abogado/AbogadoSidebar'
+import AlertasView from '../components/abogado/AlertasView'
 import AsignarView from '../components/abogado/AsignarView'
 import ConsultaView from '../components/abogado/ConsultaView'
 import HistorialView from '../components/abogado/HistorialView'
@@ -21,6 +22,11 @@ const headerPorVista = {
     titulo: 'Análisis de Inteligencia Artificial',
     subtitulo: 'Módulo E: Generación de resúmenes por rol',
     campana: false,
+  },
+  alertas: {
+    titulo: 'Alertas proactivas de vencimientos',
+    subtitulo: 'Sistema de seguimiento judicial',
+    campana: true,
   },
   historial: {
     titulo: 'Powered by MagicJuris',
@@ -66,6 +72,7 @@ export default function AbogadoDashboard({ onHome, onNavigate }) {
             {vista === 'consulta' && (
               <ConsultaView procesos={procesos} proceso={proceso} onSelect={setProceso} setVista={setVista} />
             )}
+            {vista === 'alertas' && <AlertasView />}
             {vista === 'resumenes' && (
               <ResumenesIAView procesos={procesos} proceso={proceso} onSelect={setProceso} />
             )}
@@ -80,7 +87,7 @@ export default function AbogadoDashboard({ onHome, onNavigate }) {
         </div>
       </div>
 
-      <ChatWidget rol="abogado" procesoId={proceso?.id} />
+      <ChatWidget rol="abogado" procesoId={proceso?.radicado} />
     </div>
   )
 }
