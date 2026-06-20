@@ -1,5 +1,16 @@
 import { config } from '../config/env';
 
+const getErrorMessage = (errorData, status) => {
+  if (errorData.detail) {
+    if (typeof errorData.detail === 'string') return errorData.detail;
+    if (Array.isArray(errorData.detail)) return errorData.detail.map(e => e.msg || JSON.stringify(e)).join(', ');
+    return JSON.stringify(errorData.detail);
+  }
+  if (errorData.error) return errorData.error;
+  if (errorData.message) return errorData.message;
+  return `HTTP ${status}`;
+};
+
 export const apiClient = {
   get: async (endpoint) => {
     try {
@@ -10,7 +21,7 @@ export const apiClient = {
       const response = await fetch(`${config.apiUrl}${endpoint}`, { headers });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${response.status}`);
+        throw new Error(getErrorMessage(errorData, response.status));
       }
       return await response.json();
     } catch (error) {
@@ -31,7 +42,7 @@ export const apiClient = {
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${response.status}`);
+        throw new Error(getErrorMessage(errorData, response.status));
       }
       return await response.json();
     } catch (error) {
@@ -52,7 +63,7 @@ export const apiClient = {
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${response.status}`);
+        throw new Error(getErrorMessage(errorData, response.status));
       }
       return await response.json();
     } catch (error) {
@@ -73,7 +84,7 @@ export const apiClient = {
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${response.status}`);
+        throw new Error(getErrorMessage(errorData, response.status));
       }
       return await response.json();
     } catch (error) {
@@ -93,7 +104,7 @@ export const apiClient = {
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${response.status}`);
+        throw new Error(getErrorMessage(errorData, response.status));
       }
       return await response.json();
     } catch (error) {

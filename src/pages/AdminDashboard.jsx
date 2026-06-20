@@ -22,6 +22,7 @@ import TopBar from '../components/shared/TopBar'
 import { formatFecha } from '../lib/ui'
 import { taskService } from '../services/taskService'
 import { processService } from '../services/processService'
+import { userService } from '../services/userService'
 
 const items = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -70,14 +71,24 @@ export default function AdminDashboard({ onHome, onNavigate }) {
     
     const loadProcesos = async () => {
       try {
-        const data = await processService.getProcesses()
-        // Map Python backend format to UI expected fields if necessary
-        const pMapped = data.map(p => ({
-          ...p,
-          estadoLabel: p.status || 'Registrado',
-          criticidad: p.urgency || 'BAJA',
-          cliente: p.client_name || 'Desconocido',
-          tipo_participacion: p.participation_type || 'Demandante'
+        const [data, users] = await Promise.all([
+          processService.getProcesses(),
+          userService.getUsers().catch(() => []),
+        ])
+        const mapU = {}
+        ;(users || []).forEach((u) => {
+          mapU[u.id] = u.name
+        })
+        // Campos REALES del backend Python: etapa, tipo_participacion, cliente_id, abogado_id.
+        const pMapped = (data || []).map((p) => ({
+          id: p.id,
+          radicado: p.radicado,
+          estadoLabel: p.etapa || 'Registrado',
+          tipo_participacion: p.tipo_participacion || '',
+          jurisdiccion: p.jurisdiccion,
+          cliente: mapU[p.cliente_id] || 'Cliente',
+          abogado: mapU[p.abogado_id] || 'Abogado',
+          criticidad: 'Informativa',
         }))
         setProcesos(pMapped)
       } catch (error) {

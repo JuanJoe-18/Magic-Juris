@@ -1,21 +1,6 @@
-const { OpenAI } = require('openai')
+const { executeWithFallback } = require('./aiFallback')
 const prisma = require('../db')
 const { anonimizar } = require('../lib/anonimizar')
-
-function getClient() {
-  if (process.env.AZURE_OPENAI_API_KEY) {
-    return new OpenAI({
-      apiKey: process.env.AZURE_OPENAI_API_KEY,
-      baseURL: process.env.AZURE_OPENAI_ENDPOINT,
-      defaultHeaders: { 'api-key': process.env.AZURE_OPENAI_API_KEY }
-    })
-  }
-  if (!process.env.OPENCODE_API_KEY) return null
-  return new OpenAI({
-    apiKey: process.env.OPENCODE_API_KEY,
-    baseURL: 'https://opencode.ai/zen/v1',
-  })
-}
 
 // Extrae el contexto del proceso desde la DB dependiendo del rol (RAG)
 async function construirContextoRAG(procesoId, rol) {
@@ -89,10 +74,7 @@ Mantén un tono ejecutivo y enfocado en la eficiencia.`
 
 async function procesarChat(mensaje, historialAnterior = [], procesoId = null, rol = 'cliente') {
   const instruccion = obtenerInstruccionSistema(rol)
-  const client = getClient()
   
-  if (!client) throw new Error('API Key no configurada')
-
   let prompt = ''
   if (rol !== 'admin') {
     const contextoRAG = await construirContextoRAG(procesoId, rol)
@@ -101,7 +83,7 @@ async function procesarChat(mensaje, historialAnterior = [], procesoId = null, r
 
   prompt += `Mensaje del usuario (${rol}): ${mensaje}`
 
-  // Convertir historial del frontend al formato OpenAI
+  // Convertir historial del frontend al formato OpenAI/Fallback
   let messages = [{ role: 'system', content: instruccion }]
   
   historialAnterior.forEach(msg => {
@@ -114,12 +96,8 @@ async function procesarChat(mensaje, historialAnterior = [], procesoId = null, r
   messages.push({ role: 'user', content: prompt })
   
   try {
-    const res = await client.chat.completions.create({
-      model: process.env.OPENCODE_MODEL || 'gpt-4o-mini',
-      messages,
-      temperature: 0.3,
-    })
-    return res.choices[0].message.content
+    const responseText = await executeWithFallback(messages, 'text', 0.3)
+    return responseText
   } catch (error) {
     console.error('Error en Chatbot IA:', error.message)
     throw new Error('Lo siento, estoy teniendo problemas de conexión con el servicio de IA. Intenta de nuevo más tarde.')
