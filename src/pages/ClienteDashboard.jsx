@@ -24,18 +24,21 @@ export default function ClienteDashboard({ onHome, onNavigate }) {
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] font-inter text-white">
-      <div className="mx-auto max-w-[1440px] px-4 py-5 md:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-5 md:px-8">
         <TopBar
           titulo="Consulta por numero de radicado"
+          subtitulo="Sistema de seguimiento judicial"
           onHome={onHome}
           usuario={{ nombre: user?.name, rol: user?.role, email: user?.email }}
           rolActual="cliente"
           onSwitchRole={onNavigate}
+          variant="client"
+          showRoleSwitcher={false}
         />
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
+        <div className="mt-6 grid gap-6 lg:grid-cols-[300px_1fr]">
           <div className="lg:sticky lg:top-5 lg:h-[calc(100vh-40px)]">
-            <NavSidebar items={items} vista={vista} setVista={setVista} />
+            <NavSidebar items={items} vista={vista} setVista={setVista} variant="client" />
           </div>
 
           <main className="min-w-0">

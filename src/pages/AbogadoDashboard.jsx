@@ -23,16 +23,16 @@ const headerPorVista = {
     campana: false,
   },
   historial: {
-    titulo: 'Historial del caso y comunicacion al cliente',
+    titulo: 'Powered by MagicJuris',
     subtitulo: 'Sistema de seguimiento judicial',
   },
   asignar: {
-    titulo: 'Asignar Accion al caso',
+    titulo: 'Powered by MagicJuris',
     subtitulo: 'Sistema de seguimiento judicial',
   },
   registrar: {
-    titulo: 'Registrar nuevo proceso',
-    subtitulo: 'Ingresar datos al sistema',
+    titulo: 'Powered by MagicJuris',
+    subtitulo: 'Sistema de seguimiento judicial',
   },
 }
 
@@ -46,7 +46,7 @@ export default function AbogadoDashboard({ onHome, onNavigate }) {
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] font-inter text-white">
-      <div className="mx-auto max-w-[1440px] px-4 py-5 md:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-5 md:px-8">
         <AbogadoHeader
           titulo={h.titulo}
           subtitulo={h.subtitulo}
@@ -57,7 +57,7 @@ export default function AbogadoDashboard({ onHome, onNavigate }) {
           usuario={{ nombre: user?.name, rol: user?.role }}
         />
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
+        <div className="mt-6 grid gap-6 lg:grid-cols-[300px_1fr]">
           <div className="lg:sticky lg:top-5 lg:h-[calc(100vh-40px)]">
             <AbogadoSidebar vista={vista} setVista={setVista} />
           </div>
