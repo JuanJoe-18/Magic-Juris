@@ -1,25 +1,24 @@
-// ── Utilidades de UI para las vistas del Abogado (diseño Fajardo) ──
-// Mapea la criticidad del mockData (Critica/Importante/Informativa) a la
-// "Guía Visual de Clasificación" del Figma (Alta / Media / Baja).
+// Utilidades de UI para las vistas del abogado.
+// Mapea la criticidad del mockData a la guia visual mostrada en pantalla.
 
 export const clasificacionConfig = {
   Critica: {
-    nivel: 'Alta',
+    nivel: 'Rojo',
     color: '#C5202E',
-    rango: 'De 1 a 7 días',
-    nota: 'Clasificación alta · requiere acción inmediata.',
+    rango: 'Urgente',
+    nota: 'Clasificacion alta, requiere accion inmediata.',
   },
   Importante: {
-    nivel: 'Media',
+    nivel: 'Amarillo',
     color: '#C79B2B',
-    rango: 'De 7 a 20 días',
-    nota: 'Clasificación media, sin alerta inmediata.',
+    rango: 'Importante',
+    nota: 'Clasificacion media, sin alerta inmediata.',
   },
   Informativa: {
-    nivel: 'Baja',
+    nivel: 'Verde',
     color: '#3FA66B',
-    rango: 'De 20 a 30 días',
-    nota: 'Clasificación baja · seguimiento informativo.',
+    rango: 'Informativo',
+    nota: 'Clasificacion baja, seguimiento informativo.',
   },
 }
 
@@ -29,11 +28,10 @@ export function clase(criticidad) {
 
 const COMBINING = new RegExp('[\\u0300-\\u036f]', 'g')
 
-// Nombre de documento sintético a partir de una actuación (estilo Rama Judicial).
 export function nombreDocumento(act) {
   if (!act?.tipo) return 'Sin documento asociado'
-  // Algunas actuaciones son meramente internas → sin documento.
   if (act.tipo === 'Constancia') return 'Sin documento asociado'
+
   const fecha = (act.fecha || '').replace(/-/g, '')
   const slug = act.tipo
     .normalize('NFD')
@@ -41,11 +39,10 @@ export function nombreDocumento(act) {
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, '_')
     .replace(/^_|_$/g, '')
+
   return `${fecha}_${slug}.pdf`
 }
 
-// Tipo de parte (Demandante / Demandado) que la firma representa.
-// El mockData no lo trae, así que se usa un valor estable por defecto.
 export function tipoCliente() {
   return 'Demandante'
 }

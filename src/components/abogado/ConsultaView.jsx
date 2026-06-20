@@ -82,9 +82,9 @@ function ActuacionCard({ act }) {
 
 function GuiaClasificacion({ proceso }) {
   const filas = [
-    { nivel: 'Alta', color: '#C5202E', rango: 'De 1 a 7 dias' },
-    { nivel: 'Media', color: '#C79B2B', rango: 'De 7 a 20 dias' },
-    { nivel: 'Baja', color: '#3FA66B', rango: 'De 20 a 30 dias' },
+    { nivel: 'Rojo', color: '#C5202E', rango: 'Urgente' },
+    { nivel: 'Amarillo', color: '#C79B2B', rango: 'Importante' },
+    { nivel: 'Verde', color: '#3FA66B', rango: 'Informativo' },
   ]
 
   return (
