@@ -10,6 +10,8 @@ const { procesarChat } = require('../services/chatbot')
 const { enviarCorreo, plantillaResumen } = require('../services/email')
 const { generarYGuardarResumenes } = require('../services/generadorResumenes')
 const { alertasProximas } = require('../services/alertas')
+const { resumenMetricas } = require('../services/metricas')
+const { listarPendientes } = require('../services/cola')
 const { anonimizar } = require('../lib/anonimizar')
 
 const app = express()
@@ -141,6 +143,24 @@ app.get('/api/alertas/proximas', async (req, res) => {
   try {
     const alertas = await alertasProximas()
     res.json(alertas)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Métricas operativas de consulta (RNF-15).
+app.get('/api/metricas/resumen', async (req, res) => {
+  try {
+    res.json(await resumenMetricas())
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Cola de reintento pendiente (RNF-12) — visibilidad de consultas en espera.
+app.get('/api/cola', async (req, res) => {
+  try {
+    res.json(await listarPendientes())
   } catch (error) {
     res.status(500).json({ error: error.message })
   }

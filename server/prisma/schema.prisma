@@ -158,3 +158,34 @@ model SolicitudHabeas {
   creadoEn   DateTime  @default(now())
   resueltoEn DateTime?
 }
+
+// ── Cola de reintento de consultas (RNF-12) ──
+// Si la fuente oficial falla tras agotar el backoff exponencial, el radicado se
+// encola y se reprocesa hasta completarse, garantizando que no se pierdan actuaciones.
+model ColaReintento {
+  id            String   @id @default(cuid())
+  radicado      String   @unique
+  intentos      Int      @default(0)
+  ultimoError   String?
+  estado        String   @default("pendiente") // pendiente | completada | fallida
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  @@index([estado])
+}
+
+// ── Métricas operativas de consulta (RNF-15) ──
+// Registra cada consulta a la fuente: éxito/fallo, latencia y origen, para monitoreo.
+model MetricaConsulta {
+  id         String   @id @default(cuid())
+  radicado   String
+  exito      Boolean
+  latenciaMs Int
+  fuente     String // real | simulada
+  nuevas     Int      @default(0)
+  desdeCache Boolean  @default(false)
+  error      String?
+  creadoEn   DateTime @default(now())
+
+  @@index([creadoEn])
+}
