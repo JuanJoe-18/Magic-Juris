@@ -8,6 +8,8 @@ const { anonimizar } = require('../lib/anonimizar')
 const { esRadicadoValido } = require('../lib/radicado')
 const { claveDe } = require('../lib/clave')
 const { generarYGuardarResumenes } = require('./generadorResumenes')
+const { registrarMetrica } = require('./metricas')
+const { encolar, marcarCompletada } = require('./cola')
 
 async function monitorearProceso(proceso) {
   const fuenteData = await fuente.consultarPorRadicado(proceso.radicado)
@@ -135,11 +137,22 @@ async function consultarProceso(radicado) {
     proceso = await autoRegistrar(radicado)
     autoRegistrado = true
   }
+  const inicio = Date.now()
   try {
     const r = await monitorearProceso(proceso)
+    const latenciaMs = Date.now() - inicio
+    // RNF-15: métrica de consulta exitosa.
+    await registrarMetrica({ radicado, exito: true, latenciaMs, fuente: FUENTE, nuevas: r.nuevas }).catch(() => {})
+    // RNF-12: si estaba en cola por una caída previa, ya se completó.
+    await marcarCompletada(radicado).catch(() => {})
     return { nuevas: r.nuevas, desdeCache: false, autoRegistrado }
   } catch (e) {
-    // Fuente no disponible → seguimos con lo persistido, sin romper la consulta.
+    const latenciaMs = Date.now() - inicio
+    // RNF-15: métrica de consulta fallida.
+    await registrarMetrica({ radicado, exito: false, latenciaMs, fuente: FUENTE, desdeCache: true, error: e.message }).catch(() => {})
+    // RNF-12: la fuente falló tras agotar el backoff → encolar para reprocesar
+    // (no se pierde la consulta) y, mientras tanto, responder con lo persistido.
+    await encolar(radicado, e.message).catch(() => {})
     return { nuevas: 0, desdeCache: true, autoRegistrado, error: e.message }
   }
 }
