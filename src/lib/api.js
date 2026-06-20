@@ -24,4 +24,5 @@ export const api = {
   obtenerProceso: (radicado) => jget(`/api/procesos/${radicado}`),
   consultar: (radicado) => jpost(`/api/procesos/${radicado}/consultar`),
   chat: (payload) => jpost('/api/chat', payload),
+  alertasProximas: () => jget('/api/alertas/proximas'),
 }

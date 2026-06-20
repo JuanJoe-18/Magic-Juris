@@ -81,6 +81,8 @@ model Actuacion {
   confianza      Float? // confianza 0..1 de la clasificación
   motivo         String? // justificación breve de la criticidad/estado
   detectadaEn DateTime @default(now()) // momento de detección (RF-16)
+  fechaVencimiento DateTime? // fecha futura detectada por IA (audiencia/término) — alerta proactiva RF-26
+  tipoVencimiento  String?   // audiencia | termino | diligencia | traslado
 
   resumenes Resumen[]
   lecturas  LecturaActuacion[]

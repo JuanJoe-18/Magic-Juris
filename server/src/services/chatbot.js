@@ -4,16 +4,28 @@ const { anonimizar } = require('../lib/anonimizar')
 
 // Extrae el contexto del proceso desde la DB dependiendo del rol (RAG)
 async function construirContextoRAG(procesoId, rol) {
-  if (!procesoId) return 'No hay contexto de un proceso específico.'
+  if (procesoId === null || procesoId === undefined || procesoId === '')
+    return 'No hay contexto de un proceso específico.'
 
-  const proceso = await prisma.proceso.findUnique({
-    where: { id: procesoId },
-    include: {
-      actuaciones: { orderBy: { fecha: 'desc' }, take: 5 }, // Últimas 5
-    },
-  })
+  // El frontend puede pasar el radicado (común a ambos backends) o un id.
+  // El id de Proceso en Node es un String (cuid); Python usa enteros, así que
+  // buscamos primero por radicado y, si no, por id (siempre como String).
+  const ref = String(procesoId).trim()
+  const incluir = { actuaciones: { orderBy: { fecha: 'desc' }, take: 5 } }
 
-  if (!proceso) return 'El proceso no existe en la base de datos.'
+  let proceso = null
+  try {
+    if (/^\d{18,23}$/.test(ref)) {
+      proceso = await prisma.proceso.findFirst({ where: { radicado: ref }, include: incluir })
+    } else {
+      proceso = await prisma.proceso.findUnique({ where: { id: ref }, include: incluir })
+    }
+  } catch (e) {
+    console.warn('RAG: no se pudo cargar el proceso:', e.message)
+    return 'No hay contexto de un proceso específico.'
+  }
+
+  if (!proceso) return 'No hay contexto de un proceso específico en seguimiento por la IA.'
 
   const nombres = [proceso.demandantes, proceso.demandados].filter(Boolean)
   let contextoStr = `DATOS DEL PROCESO:\nRadicado: ${proceso.radicado}\nDespacho: ${proceso.despacho}\nEstado General: ${proceso.estadoLabel}\n\n`
@@ -100,7 +112,13 @@ async function procesarChat(mensaje, historialAnterior = [], procesoId = null, r
     return responseText
   } catch (error) {
     console.error('Error en Chatbot IA:', error.message)
-    throw new Error('Lo siento, estoy teniendo problemas de conexión con el servicio de IA. Intenta de nuevo más tarde.')
+    // Degradamos con un mensaje amable (respuesta normal, sin error rojo).
+    const msg = String(error?.message || '')
+    const esCuota = msg.includes('429') || /quota|too many requests|rate.?limit/i.test(msg)
+    if (esCuota) {
+      return 'El asistente de IA está recibiendo muchas consultas en este momento y alcanzó su límite temporal. Por favor vuelve a intentarlo en unos minutos. 🙏'
+    }
+    return 'El asistente de IA no está disponible en este momento. Por favor inténtalo de nuevo más tarde.'
   }
 }
 

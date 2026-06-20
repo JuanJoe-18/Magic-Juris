@@ -1,7 +1,8 @@
-import { ClipboardList, History, PlusCircle, Search, Sparkles } from 'lucide-react'
+import { AlarmClock, ClipboardList, History, PlusCircle, Search, Sparkles } from 'lucide-react'
 
 const items = [
   { id: 'consulta', label: 'Consulta', icon: Search },
+  { id: 'alertas', label: 'Alertas', icon: AlarmClock },
   { id: 'resumenes', label: 'Resúmenes IA', icon: Sparkles },
   { id: 'historial', label: 'Historial', icon: History },
   { id: 'asignar', label: 'Asignar tareas cliente', icon: ClipboardList },

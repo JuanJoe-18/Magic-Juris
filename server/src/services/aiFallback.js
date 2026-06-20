@@ -58,6 +58,10 @@ function getProviders() {
           parts: [{ text: msg.content }]
         }))
         const prompt = historyRaw.pop().parts[0].text
+        // Gemini exige que el historial empiece con rol 'user' (el saludo
+        // inicial del bot es 'model' y rompe startChat): descartamos los
+        // mensajes 'model' que queden al inicio.
+        while (historyRaw.length && historyRaw[0].role === 'model') historyRaw.shift()
         const model = genAI.getGenerativeModel({
           model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
           systemInstruction,

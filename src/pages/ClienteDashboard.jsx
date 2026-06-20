@@ -54,7 +54,7 @@ export default function ClienteDashboard({ onHome, onNavigate }) {
           </main>
         </div>
       </div>
-      <ChatWidget rol="cliente" procesoId={proceso?.id} />
+      <ChatWidget rol="cliente" procesoId={proceso?.radicado} />
     </div>
   )
 }

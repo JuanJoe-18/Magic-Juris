@@ -16,7 +16,8 @@
     "preguntar": "node src/jobs/preguntarGemini.js",
     "monitor": "node src/jobs/monitor.js",
     "monitor:all": "node src/jobs/monitor.js --all",
-    "monitor:watch": "node src/jobs/monitor.js --watch"
+    "monitor:watch": "node src/jobs/monitor.js --watch",
+    "demo:vencimientos": "node src/jobs/seedVencimientos.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

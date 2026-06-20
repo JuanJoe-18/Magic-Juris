@@ -9,6 +9,7 @@ const { normalizarRadicado } = require('../lib/radicado')
 const { procesarChat } = require('../services/chatbot')
 const { enviarCorreo, plantillaResumen } = require('../services/email')
 const { generarYGuardarResumenes } = require('../services/generadorResumenes')
+const { alertasProximas } = require('../services/alertas')
 const { anonimizar } = require('../lib/anonimizar')
 
 const app = express()
@@ -130,6 +131,16 @@ app.post('/api/chat', async (req, res) => {
     if (!mensaje) return res.status(400).json({ error: 'Mensaje es requerido' })
     const respuesta = await procesarChat(mensaje, historial || [], procesoId, rol)
     res.json({ respuesta })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Alertas proactivas temporales (RF-26 / criterio 4): próximos vencimientos.
+app.get('/api/alertas/proximas', async (req, res) => {
+  try {
+    const alertas = await alertasProximas()
+    res.json(alertas)
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
