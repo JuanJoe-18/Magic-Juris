@@ -53,13 +53,15 @@ export default function LegalModal({
         </div>
 
         <div className="flex flex-wrap justify-end gap-3 border-t border-[#3A3A3A] px-6 py-4">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="rounded-lg border border-[#3A3A3A] px-5 py-2.5 text-sm font-semibold text-[#D9D9D9] transition-colors hover:border-[#D9D9D9] hover:text-white"
-          >
-            {cancelLabel}
-          </button>
+          {mode === 'confirm' && (
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="rounded-lg border border-[#3A3A3A] px-5 py-2.5 text-sm font-semibold text-[#D9D9D9] transition-colors hover:border-[#D9D9D9] hover:text-white"
+            >
+              {cancelLabel}
+            </button>
+          )}
           <button
             type="button"
             onClick={mode === 'confirm' ? handleAccept : onClose}

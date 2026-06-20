@@ -6,14 +6,7 @@ import LegalModal from '../components/shared/LegalModal'
 import { useAuth } from '../context/AuthContext'
 import { userService } from '../services/userService'
 
-const LEGAL_TEXT = [
-  'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non arcu eget sem porttitor placerat. Integer vulputate, tortor in scelerisque faucibus, mauris sem pulvinar neque, vel commodo justo tellus vitae libero. Donec feugiat nisl nec justo tempus, vitae feugiat lectus porttitor.',
-  'Praesent eleifend, purus non bibendum consectetur, mauris lorem iaculis justo, ac aliquam nulla sapien non lacus. Nunc euismod, nibh sed facilisis volutpat, sem lectus volutpat nibh, a tincidunt lorem elit id mi. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae.',
-  'Aliquam vitae urna gravida, sollicitudin ex eu, pellentesque lacus. Vivamus in dignissim lectus. Mauris ullamcorper, risus et tincidunt ultrices, purus tellus posuere enim, vel pellentesque lorem urna in ipsum. Integer in eros feugiat, laoreet magna vel, fermentum lectus.',
-  'Suspendisse potenti. Curabitur id blandit massa. Etiam posuere viverra velit, sit amet feugiat justo interdum sed. Sed blandit augue sit amet erat ultricies, sit amet rhoncus lorem faucibus. Proin tristique gravida augue, vitae eleifend lorem consequat et.',
-  'Morbi tincidunt varius nisi, a molestie justo luctus a. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam et dui malesuada, efficitur lacus a, interdum massa. Pellentesque nec consequat orci. Curabitur congue ligula sit amet augue tincidunt accumsan.',
-  'Ut malesuada dictum ullamcorper. Fusce fermentum mi at mi feugiat, at tristique dui finibus. Duis at est in eros feugiat pellentesque. Nullam ut augue id purus tristique dictum. Cras ut semper urna. Nulla facilisi. Integer venenatis lorem vel sem volutpat, a accumsan massa tincidunt.',
-]
+import { POLICY_TEXT, TERMS_TEXT } from '../constants/legalTexts'
 
 const initialRegisterForm = {
   fullName: '',
@@ -23,6 +16,7 @@ const initialRegisterForm = {
   requestedRole: 'CLIENTE',
   professionalCard: '',
   acceptedPolicy: false,
+  acceptedTerms: false,
 }
 
 function FieldError({ message }) {
@@ -51,7 +45,9 @@ export default function Login({ onLoginSuccess, onBack }) {
   const [registerError, setRegisterError] = useState('')
   const [registerLoading, setRegisterLoading] = useState(false)
   const [policyAcceptedOnce, setPolicyAcceptedOnce] = useState(false)
+  const [termsAcceptedOnce, setTermsAcceptedOnce] = useState(false)
   const [legalModal, setLegalModal] = useState({ open: false, type: 'policy-consent' })
+  const [pendingLoginUser, setPendingLoginUser] = useState(null)
 
   const registerErrors = useMemo(() => {
     const errors = {}
@@ -67,15 +63,27 @@ export default function Login({ onLoginSuccess, onBack }) {
       errors.professionalCard = 'Ingresa la tarjeta profesional.'
     }
     if (!registerForm.acceptedPolicy) {
-      errors.acceptedPolicy = 'Debes aceptar la politica de tratamiento de datos.'
+      errors.acceptedPolicy = 'Debes aceptar la política de tratamiento de datos.'
+    }
+    if (!registerForm.acceptedTerms) {
+      errors.acceptedTerms = 'Debes aceptar los términos y condiciones.'
     }
     return errors
   }, [registerForm])
 
   const currentLegalTitle =
-    legalModal.type === 'terms'
-      ? 'Terminos y condiciones'
-      : 'Politica de tratamiento y proteccion de datos personales'
+    legalModal.type === 'terms' || legalModal.type === 'terms-consent'
+      ? 'Términos y condiciones'
+      : legalModal.type === 'login-consent'
+      ? 'Términos, Condiciones y Privacidad'
+      : 'Política de tratamiento y protección de datos personales'
+
+  const currentLegalText = 
+    legalModal.type === 'login-consent' 
+      ? [...TERMS_TEXT, '──────────────────────────────', 'POLÍTICA DE PRIVACIDAD Y DATOS', '──────────────────────────────', ...POLICY_TEXT]
+      : legalModal.type.includes('terms') 
+      ? TERMS_TEXT 
+      : POLICY_TEXT
 
   const isRegister = mode === 'register'
 
@@ -105,6 +113,17 @@ export default function Login({ onLoginSuccess, onBack }) {
 
     try {
       const user = await login(email, password)
+      
+      // Check if user has already accepted terms on this device
+      const hasAccepted = localStorage.getItem(`legal_accepted_${user.email}`)
+      
+      if (!hasAccepted) {
+        setPendingLoginUser(user)
+        openLegalModal('login-consent')
+        setLoading(false)
+        return
+      }
+
       onLoginSuccess(user.role.toLowerCase(), user)
     } catch (err) {
       setError(
@@ -125,6 +144,7 @@ export default function Login({ onLoginSuccess, onBack }) {
       confirmPassword: true,
       professionalCard: true,
       acceptedPolicy: true,
+      acceptedTerms: true,
     })
 
     if (Object.keys(registerErrors).length > 0) {
@@ -143,6 +163,7 @@ export default function Login({ onLoginSuccess, onBack }) {
         tarjeta_profesional:
           registerForm.requestedRole === 'ABOGADO' ? registerForm.professionalCard : null,
         accepted_policy: registerForm.acceptedPolicy,
+        accepted_terms: registerForm.acceptedTerms,
       })
       setRegisterMessage(response.message)
       setRegisterForm(initialRegisterForm)
@@ -164,6 +185,18 @@ export default function Login({ onLoginSuccess, onBack }) {
       return
     }
     updateRegisterField('acceptedPolicy', true)
+  }
+
+  const handleTermsCheckboxChange = () => {
+    if (registerForm.acceptedTerms) {
+      updateRegisterField('acceptedTerms', false)
+      return
+    }
+    if (!termsAcceptedOnce) {
+      openLegalModal('terms-consent')
+      return
+    }
+    updateRegisterField('acceptedTerms', true)
   }
 
   return (
@@ -230,7 +263,7 @@ export default function Login({ onLoginSuccess, onBack }) {
                 </button>
               </form>
 
-              <div className="mt-6 space-y-4 text-center">
+              <div className="mt-6 flex flex-col items-center gap-4 text-center">
                 <button
                   type="button"
                   onClick={() => switchToMode('register')}
@@ -363,19 +396,35 @@ export default function Login({ onLoginSuccess, onBack }) {
                   )}
                 </div>
 
-                <div className="rounded-xl border border-[#3A3A3A] bg-[#141414] p-4">
-                  <label className="flex items-start gap-3 text-sm text-[#D9D9D9]">
-                    <input
-                      type="checkbox"
-                      checked={registerForm.acceptedPolicy}
-                      onChange={handlePolicyCheckboxChange}
-                      className="mt-0.5 h-4 w-4 rounded border-[#3A3A3A] bg-[#141414] accent-[#84120C]"
+                <div className="space-y-4 rounded-xl border border-[#3A3A3A] bg-[#141414] p-4">
+                  <div>
+                    <label className="flex items-start gap-3 text-sm text-[#D9D9D9]">
+                      <input
+                        type="checkbox"
+                        checked={registerForm.acceptedTerms}
+                        onChange={handleTermsCheckboxChange}
+                        className="mt-0.5 h-4 w-4 rounded border-[#3A3A3A] bg-[#141414] accent-[#84120C]"
+                      />
+                      <span>Acepto los términos y condiciones del servicio</span>
+                    </label>
+                    <FieldError
+                      message={registerTouched.acceptedTerms ? registerErrors.acceptedTerms : ''}
                     />
-                    <span>Acepto la politica de tratamiento y proteccion de datos personales</span>
-                  </label>
-                  <FieldError
-                    message={registerTouched.acceptedPolicy ? registerErrors.acceptedPolicy : ''}
-                  />
+                  </div>
+                  <div>
+                    <label className="flex items-start gap-3 text-sm text-[#D9D9D9]">
+                      <input
+                        type="checkbox"
+                        checked={registerForm.acceptedPolicy}
+                        onChange={handlePolicyCheckboxChange}
+                        className="mt-0.5 h-4 w-4 rounded border-[#3A3A3A] bg-[#141414] accent-[#84120C]"
+                      />
+                      <span>Acepto la política de tratamiento y protección de datos personales</span>
+                    </label>
+                    <FieldError
+                      message={registerTouched.acceptedPolicy ? registerErrors.acceptedPolicy : ''}
+                    />
+                  </div>
                 </div>
 
                 {registerError && (
@@ -437,20 +486,34 @@ export default function Login({ onLoginSuccess, onBack }) {
       <LegalModal
         open={legalModal.open}
         title={currentLegalTitle}
-        content={LEGAL_TEXT}
-        mode={legalModal.type === 'policy-consent' ? 'confirm' : 'info'}
+        content={currentLegalText}
+        mode={legalModal.type.endsWith('-consent') ? 'confirm' : 'info'}
         onClose={() => setLegalModal({ open: false, type: legalModal.type })}
         onCancel={() => {
           if (legalModal.type === 'policy-consent') {
             updateRegisterField('acceptedPolicy', false)
+          } else if (legalModal.type === 'terms-consent') {
+            updateRegisterField('acceptedTerms', false)
+          } else if (legalModal.type === 'login-consent') {
+            setPendingLoginUser(null)
+            setError('Debes aceptar los términos y condiciones para usar el sistema.')
           }
         }}
         onAccept={() => {
           if (legalModal.type === 'policy-consent') {
             setPolicyAcceptedOnce(true)
             updateRegisterField('acceptedPolicy', true)
+          } else if (legalModal.type === 'terms-consent') {
+            setTermsAcceptedOnce(true)
+            updateRegisterField('acceptedTerms', true)
+          } else if (legalModal.type === 'login-consent' && pendingLoginUser) {
+            localStorage.setItem(`legal_accepted_${pendingLoginUser.email}`, 'true')
+            onLoginSuccess(pendingLoginUser.role.toLowerCase(), pendingLoginUser)
+            setPendingLoginUser(null)
           }
         }}
+        acceptLabel="Aceptar"
+        cancelLabel="Rechazar"
       />
     </div>
   )

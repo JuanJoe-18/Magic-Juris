@@ -95,6 +95,32 @@ async function monitorearPorRadicado(radicado) {
   return monitorearProceso(proceso)
 }
 
+// Auto-registro a demanda (RF-10): si el radicado aún no existe en la DB de IA
+// (puente con el backend de procesos), se crea un registro mínimo para poder
+// consultarlo en vivo. La consulta la dispara un abogado sobre un radicado puntual,
+// así que sigue siendo "consulta a demanda", no recolección masiva.
+async function autoRegistrar(radicado) {
+  const cliente = await prisma.usuario.upsert({
+    where: { email: 'externo@magicjuris.local' },
+    update: {},
+    create: {
+      nombre: 'Titular (auto-registro)',
+      email: 'externo@magicjuris.local',
+      passwordHash: 'externo',
+      rol: 'cliente',
+    },
+  })
+  return prisma.proceso.create({
+    data: {
+      radicado,
+      clienteId: cliente.id,
+      jurisdiccion: 'civil', // supletoria por defecto; se afina con la consulta real
+      estado: 'E0',
+      estadoLabel: 'Registrado',
+    },
+  })
+}
+
 // Consulta con RESPALDO: si la fuente falla (Rama Judicial caída), devuelve el
 // último estado conocido almacenado (RF-14 / RNF-12) en vez de fallar.
 async function consultarProceso(radicado) {
@@ -103,19 +129,18 @@ async function consultarProceso(radicado) {
       code: 'INVALIDO',
     })
   }
-  const proceso = await prisma.proceso.findUnique({ where: { radicado } })
+  let proceso = await prisma.proceso.findUnique({ where: { radicado } })
+  let autoRegistrado = false
   if (!proceso) {
-    throw Object.assign(
-      new Error('Proceso no registrado (consulta a demanda, RF-10).'),
-      { code: 'NO_REGISTRADO' }
-    )
+    proceso = await autoRegistrar(radicado)
+    autoRegistrado = true
   }
   try {
     const r = await monitorearProceso(proceso)
-    return { nuevas: r.nuevas, desdeCache: false }
+    return { nuevas: r.nuevas, desdeCache: false, autoRegistrado }
   } catch (e) {
     // Fuente no disponible → seguimos con lo persistido, sin romper la consulta.
-    return { nuevas: 0, desdeCache: true, error: e.message }
+    return { nuevas: 0, desdeCache: true, autoRegistrado, error: e.message }
   }
 }
 

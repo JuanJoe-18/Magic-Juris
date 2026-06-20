@@ -7,6 +7,9 @@ const prisma = require('../db')
 const { consultarProceso } = require('../services/monitoreo')
 const { normalizarRadicado } = require('../lib/radicado')
 const { procesarChat } = require('../services/chatbot')
+const { enviarCorreo, plantillaResumen } = require('../services/email')
+const { generarYGuardarResumenes } = require('../services/generadorResumenes')
+const { anonimizar } = require('../lib/anonimizar')
 
 const app = express()
 app.use(cors())
@@ -129,6 +132,175 @@ app.post('/api/chat', async (req, res) => {
     res.json({ respuesta })
   } catch (error) {
     res.status(500).json({ error: error.message })
+  }
+})
+
+// Fuerza la generación del resumen IA a demanda.
+app.post('/api/procesos/:radicado/generar-resumen', async (req, res) => {
+  try {
+    const radicado = normalizarRadicado(req.params.radicado)
+    const proceso = await prisma.proceso.findUnique({
+      where: { radicado },
+      include: { actuaciones: { orderBy: { fecha: 'desc' }, take: 1 } },
+    })
+    if (!proceso) return res.status(404).json({ error: 'Proceso no registrado' })
+    const ultima = proceso.actuaciones[0]
+    if (!ultima) return res.status(400).json({ error: 'Consulta el proceso primero.' })
+
+    const nombres = [proceso.demandantes, proceso.demandados].filter(Boolean)
+    await generarYGuardarResumenes(ultima, anonimizar(ultima.descripcion, nombres))
+    res.json({ success: true })
+  } catch (e) {
+    console.error('Error generando resumen:', e)
+    let msg = e.message
+    if (msg.includes('429 Too Many Requests') || msg.includes('quota')) {
+      msg = 'Límite de cuota gratuita alcanzado en Google Gemini. Por favor espera unos 30 segundos y vuelve a intentarlo.'
+    }
+    res.status(500).json({ error: msg })
+  }
+})
+
+// Envía el resumen IA al correo del cliente (genera el resumen si aún no existe).
+app.post('/api/procesos/:radicado/enviar-resumen', async (req, res) => {
+  try {
+    const radicado = normalizarRadicado(req.params.radicado)
+    const { email, rol = 'cliente' } = req.body || {}
+    if (!email) return res.status(400).json({ error: 'Correo destinatario requerido' })
+
+    const proceso = await prisma.proceso.findUnique({
+      where: { radicado },
+      include: { actuaciones: { orderBy: { fecha: 'desc' }, take: 1 } },
+    })
+    if (!proceso) return res.status(404).json({ error: 'Proceso no registrado' })
+    const ultima = proceso.actuaciones[0]
+    if (!ultima) {
+      return res.status(400).json({ error: 'Consulta el proceso primero (sin actuaciones).' })
+    }
+
+    // Buscar el resumen; si no existe, generarlo a demanda (módulo E).
+    const buscar = () =>
+      prisma.resumen.findFirst({
+        where: { rolDestino: rol, actuacion: { procesoId: proceso.id } },
+        orderBy: { generadoEn: 'desc' },
+      })
+    let resumen = await buscar()
+    if (!resumen) {
+      const nombres = [proceso.demandantes, proceso.demandados].filter(Boolean)
+      await generarYGuardarResumenes(ultima, anonimizar(ultima.descripcion, nombres))
+      resumen = await buscar()
+    }
+    if (!resumen) {
+      return res.status(502).json({ error: 'No se pudo generar el resumen (¿IA disponible?).' })
+    }
+
+    const r = await enviarCorreo({
+      to: email,
+      subject: `Actualización de su proceso — Radicado ${radicado}`,
+      text: resumen.contenido,
+      html: plantillaResumen({ radicado, contenido: resumen.contenido }),
+    })
+
+    // Trazabilidad (RF-30): registrar la comunicación.
+    await prisma.comunicacion.create({
+      data: {
+        procesoId: proceso.id,
+        resumenId: resumen.id,
+        destinatario: email,
+        canal: 'correo',
+        estado: r.enviado ? 'entregado' : 'guardado',
+      },
+    })
+
+    res.json({ ...r, destinatario: email, resumen: resumen.contenido })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// ── Habeas Data (Ley 1581) — Módulo H ──
+
+// RF-35 / RF-38: finalidad del tratamiento + base de legitimación por proceso.
+app.get('/api/habeas/proceso/:radicado', async (req, res) => {
+  const radicado = normalizarRadicado(req.params.radicado)
+  const proceso = await prisma.proceso.findUnique({
+    where: { radicado },
+    include: { tratamiento: true },
+  })
+  if (!proceso) return res.status(404).json({ error: 'Proceso no registrado' })
+  res.json({ radicado, tratamiento: proceso.tratamiento || null })
+})
+
+app.post('/api/habeas/proceso/:radicado', async (req, res) => {
+  try {
+    const radicado = normalizarRadicado(req.params.radicado)
+    const { finalidad, baseLegitimacion } = req.body
+    if (!finalidad || !baseLegitimacion) {
+      return res.status(400).json({ error: 'Falta finalidad o baseLegitimacion' })
+    }
+
+    const proceso = await prisma.proceso.findUnique({ where: { radicado } })
+    if (!proceso) return res.status(404).json({ error: 'Proceso no registrado' })
+
+    const tratamiento = await prisma.tratamientoDatos.upsert({
+      where: { procesoId: proceso.id },
+      update: { finalidad, baseLegitimacion },
+      create: { procesoId: proceso.id, finalidad, baseLegitimacion },
+    })
+
+    res.json({ radicado, tratamiento })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// RF-36: solicitudes ARCO (acceso / rectificación / supresión).
+const TIPOS_ARCO = ['acceso', 'rectificacion', 'supresion']
+
+app.get('/api/habeas/solicitudes', async (req, res) => {
+  const solicitudes = await prisma.solicitudHabeas.findMany({
+    include: { titular: { select: { nombre: true, email: true } } },
+    orderBy: { creadoEn: 'desc' },
+  })
+  res.json(solicitudes)
+})
+
+app.post('/api/habeas/solicitudes', async (req, res) => {
+  try {
+    const { titularEmail, tipo } = req.body || {}
+    if (!TIPOS_ARCO.includes(tipo)) {
+      return res.status(400).json({ error: 'tipo inválido (acceso | rectificacion | supresion)' })
+    }
+    if (!titularEmail) return res.status(400).json({ error: 'titularEmail requerido' })
+
+    const titular = await prisma.usuario.upsert({
+      where: { email: titularEmail },
+      update: {},
+      create: {
+        nombre: titularEmail.split('@')[0],
+        email: titularEmail,
+        passwordHash: 'habeas',
+        rol: 'cliente',
+      },
+    })
+    const solicitud = await prisma.solicitudHabeas.create({
+      data: { titularId: titular.id, tipo },
+      include: { titular: { select: { nombre: true, email: true } } },
+    })
+    res.status(201).json(solicitud)
+  } catch (e) {
+    res.status(400).json({ error: e.message })
+  }
+})
+
+app.patch('/api/habeas/solicitudes/:id/resolver', async (req, res) => {
+  try {
+    const solicitud = await prisma.solicitudHabeas.update({
+      where: { id: req.params.id },
+      data: { estado: 'resuelta', resueltoEn: new Date() },
+    })
+    res.json(solicitud)
+  } catch {
+    res.status(404).json({ error: 'Solicitud no encontrada' })
   }
 })
 

@@ -166,24 +166,22 @@ function CabeceraProceso({ proceso, actuaciones }) {
   )
 }
 
-// ── Panel del resumen IA (técnico, para el abogado) ──
-function PanelIA({ resumen }) {
+// ── Panel de redirección a Resúmenes IA ──
+function PanelIA({ setVista }) {
   return (
-    <div className="rounded-[22px] border border-[#262626] bg-[#101010] p-5">
+    <div className="rounded-[22px] border border-[#C79B2B]/30 bg-[#101010] p-5 shadow-[0_0_20px_rgba(199,155,43,0.05)]">
       <div className="mb-3 flex items-center gap-2">
-        <Sparkles size={16} className="text-[#C79B2B]" />
-        <h3 className="font-sora text-lg font-bold text-white">Resumen IA · Abogado</h3>
+        <Sparkles size={18} className="text-[#C79B2B]" />
+        <h3 className="font-sora text-lg font-bold text-white">Inteligencia Artificial</h3>
       </div>
-      {resumen ? (
-        <p className="text-[13px] leading-relaxed text-white/70">{resumen}</p>
-      ) : (
-        <p className="text-[13px] text-white/40">
-          El resumen técnico se generará automáticamente con el módulo de IA
-          (módulo E).
-        </p>
-      )}
-      <button className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[#2A2A2A] bg-[#161616] px-4 py-2 text-[13px] font-semibold text-white/80 transition-colors hover:bg-[#1C1C1C]">
-        <Send size={14} /> Enviar resumen al cliente
+      <p className="text-[13px] text-white/60 mb-5 leading-relaxed">
+        El análisis técnico y la generación del lenguaje llano para el cliente se gestionan en su propia vista dedicada a pantalla completa.
+      </p>
+      <button
+        onClick={() => setVista('resumenes')}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#C79B2B] bg-[#C79B2B]/10 px-4 py-3 text-[13px] font-bold text-[#C79B2B] transition-colors hover:bg-[#C79B2B]/20"
+      >
+        <Sparkles size={16} /> Ir a Resúmenes IA
       </button>
     </div>
   )
@@ -254,7 +252,7 @@ function GuiaClasificacion() {
 }
 
 // ── Vista Consulta: ficha del proceso con lo consultado en la Rama Judicial ──
-export default function ConsultaView() {
+export default function ConsultaView({ setVista, onSelect }) {
   const [radicado, setRadicado] = useState('')
   const [resultado, setResultado] = useState(null) // { proceso, actuaciones, resumenes }
   const [cargando, setCargando] = useState(false)
@@ -280,6 +278,7 @@ export default function ConsultaView() {
           actuaciones: d.actuaciones,
           resumenes: d.resumenes,
         })
+        if (d.proceso && onSelect) onSelect(d.proceso)
         if (d.desdeCache) {
           const f = d.proceso?.sincronizadoEn
             ? ` (última sincronización: ${new Date(
@@ -430,7 +429,7 @@ export default function ConsultaView() {
 
             {/* Columna derecha: IA + fuentes + guía */}
             <div className="space-y-5">
-              <PanelIA resumen={resultado.resumenes?.abogado} />
+              <PanelIA setVista={setVista} />
               <FuentesPanel />
               <GuiaClasificacion />
             </div>

@@ -1,14 +1,19 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai')
+const { OpenAI } = require('openai')
 const prisma = require('../db')
 const { anonimizar } = require('../lib/anonimizar')
 
-function getModel(systemInstruction) {
-  if (!process.env.GEMINI_API_KEY) return null
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-  return genAI.getGenerativeModel({
-    model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-    systemInstruction,
-    generationConfig: { temperature: 0.3 }, // Un poco de creatividad, pero respuestas consistentes
+function getClient() {
+  if (process.env.AZURE_OPENAI_API_KEY) {
+    return new OpenAI({
+      apiKey: process.env.AZURE_OPENAI_API_KEY,
+      baseURL: process.env.AZURE_OPENAI_ENDPOINT,
+      defaultHeaders: { 'api-key': process.env.AZURE_OPENAI_API_KEY }
+    })
+  }
+  if (!process.env.OPENCODE_API_KEY) return null
+  return new OpenAI({
+    apiKey: process.env.OPENCODE_API_KEY,
+    baseURL: 'https://opencode.ai/zen/v1',
   })
 }
 
@@ -84,9 +89,9 @@ Mantén un tono ejecutivo y enfocado en la eficiencia.`
 
 async function procesarChat(mensaje, historialAnterior = [], procesoId = null, rol = 'cliente') {
   const instruccion = obtenerInstruccionSistema(rol)
-  const model = getModel(instruccion)
+  const client = getClient()
   
-  if (!model) throw new Error('API Key no configurada')
+  if (!client) throw new Error('API Key no configurada')
 
   let prompt = ''
   if (rol !== 'admin') {
@@ -96,23 +101,25 @@ async function procesarChat(mensaje, historialAnterior = [], procesoId = null, r
 
   prompt += `Mensaje del usuario (${rol}): ${mensaje}`
 
-  // Convertir historial del frontend al formato que espera Gemini (contents).
-  // Gemini exige que el primer mensaje del historial sea del 'user'.
-  let historyRaw = historialAnterior.map(msg => ({
-    role: msg.role === 'user' ? 'user' : 'model',
-    parts: [{ text: msg.content }]
-  }))
+  // Convertir historial del frontend al formato OpenAI
+  let messages = [{ role: 'system', content: instruccion }]
   
-  // Eliminar mensajes 'model' iniciales (ej. el saludo del frontend)
-  while (historyRaw.length > 0 && historyRaw[0].role === 'model') {
-    historyRaw.shift()
-  }
+  historialAnterior.forEach(msg => {
+    messages.push({
+      role: msg.role === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    })
+  })
 
-  const chatSession = model.startChat({ history: historyRaw })
+  messages.push({ role: 'user', content: prompt })
   
   try {
-    const result = await chatSession.sendMessage(prompt)
-    return result.response.text()
+    const res = await client.chat.completions.create({
+      model: process.env.OPENCODE_MODEL || 'gpt-4o-mini',
+      messages,
+      temperature: 0.3,
+    })
+    return res.choices[0].message.content
   } catch (error) {
     console.error('Error en Chatbot IA:', error.message)
     throw new Error('Lo siento, estoy teniendo problemas de conexión con el servicio de IA. Intenta de nuevo más tarde.')

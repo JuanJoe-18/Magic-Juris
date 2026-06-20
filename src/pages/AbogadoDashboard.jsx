@@ -8,6 +8,7 @@ import AsignarView from '../components/abogado/AsignarView'
 import ConsultaView from '../components/abogado/ConsultaView'
 import HistorialView from '../components/abogado/HistorialView'
 import RegistrarProcessView from '../components/abogado/RegistrarProcessView'
+import ResumenesIAView from '../components/abogado/ResumenesIAView'
 import ChatWidget from '../components/shared/ChatWidget'
 
 const headerPorVista = {
@@ -15,6 +16,11 @@ const headerPorVista = {
     titulo: 'Consulta cruda y autoclasificacion de actuaciones',
     subtitulo: 'Sistema de seguimiento judicial',
     campana: true,
+  },
+  resumenes: {
+    titulo: 'Análisis de Inteligencia Artificial',
+    subtitulo: 'Módulo E: Generación de resúmenes por rol',
+    campana: false,
   },
   historial: {
     titulo: 'Historial del caso y comunicacion al cliente',
@@ -58,7 +64,10 @@ export default function AbogadoDashboard({ onHome, onNavigate }) {
 
           <main className="min-w-0">
             {vista === 'consulta' && (
-              <ConsultaView procesos={procesos} proceso={proceso} onSelect={setProceso} />
+              <ConsultaView procesos={procesos} proceso={proceso} onSelect={setProceso} setVista={setVista} />
+            )}
+            {vista === 'resumenes' && (
+              <ResumenesIAView procesos={procesos} proceso={proceso} onSelect={setProceso} />
             )}
             {vista === 'historial' && (
               <HistorialView procesos={procesos} proceso={proceso} onSelect={setProceso} />

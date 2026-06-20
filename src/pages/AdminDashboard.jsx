@@ -6,12 +6,14 @@ import {
   LayoutDashboard,
   Mail,
   Settings,
+  ShieldCheck,
   Users,
 } from 'lucide-react'
 
 import { useAuth } from '../context/AuthContext'
 import { MockContext } from '../context/MockContext'
 import UserManagementPanel from '../components/admin/UserManagementPanel'
+import HabeasPanel from '../components/admin/HabeasPanel'
 import AdminPanel, { CasosTabla } from '../components/admin/AdminPanel'
 import { ActividadLine, EstadoBars, ParticipacionDonut } from '../components/admin/charts'
 import ChatWidget from '../components/shared/ChatWidget'
@@ -19,6 +21,7 @@ import NavSidebar from '../components/shared/NavSidebar'
 import TopBar from '../components/shared/TopBar'
 import { formatFecha } from '../lib/ui'
 import { taskService } from '../services/taskService'
+import { processService } from '../services/processService'
 
 const items = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -27,6 +30,7 @@ const items = [
   { id: 'correos', label: 'Correos', icon: Mail },
   { id: 'actividad', label: 'Actividad', icon: Activity },
   { id: 'usuarios', label: 'Usuarios', icon: Users },
+  { id: 'habeas', label: 'Habeas Data', icon: ShieldCheck },
   { id: 'config', label: 'Configuracion', icon: Settings },
 ]
 
@@ -49,10 +53,10 @@ function Panel({ titulo, subtitulo, children }) {
 }
 
 export default function AdminDashboard({ onHome, onNavigate }) {
-  const { procesos } = useContext(MockContext)
   const { user } = useAuth()
   const [vista, setVista] = useState('dashboard')
   const [tasks, setTasks] = useState([])
+  const [procesos, setProcesos] = useState([])
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -63,7 +67,26 @@ export default function AdminDashboard({ onHome, onNavigate }) {
         console.warn('No fue posible cargar tareas para admin.', error)
       }
     }
+    
+    const loadProcesos = async () => {
+      try {
+        const data = await processService.getProcesses()
+        // Map Python backend format to UI expected fields if necessary
+        const pMapped = data.map(p => ({
+          ...p,
+          estadoLabel: p.status || 'Registrado',
+          criticidad: p.urgency || 'BAJA',
+          cliente: p.client_name || 'Desconocido',
+          tipo_participacion: p.participation_type || 'Demandante'
+        }))
+        setProcesos(pMapped)
+      } catch (error) {
+        console.warn('Error loading processes in admin dashboard:', error)
+      }
+    }
+    
     loadTasks()
+    loadProcesos()
   }, [])
 
   return (
@@ -129,25 +152,43 @@ export default function AdminDashboard({ onHome, onNavigate }) {
               />
             )}
 
-            {vista === 'reportes' && (
-              <div className="space-y-5">
-                <h1 className="font-sora text-3xl font-bold text-white">Reportes</h1>
-                <div className="grid gap-5 lg:grid-cols-2">
-                  <Panel titulo="Estado de los procesos" subtitulo="Distribucion por etapa procesal.">
-                    <EstadoBars data={estados} />
-                  </Panel>
-                  <Panel titulo="Tipo de participacion" subtitulo="Demandante vs. demandado.">
-                    <ParticipacionDonut
-                      total={128}
-                      segmentos={[
-                        { label: 'Demandante', value: 76, color: '#84120C' },
-                        { label: 'Demandado', value: 52, color: '#3A3A3A' },
-                      ]}
-                    />
-                  </Panel>
+            {vista === 'reportes' && (() => {
+              const norm = (s) => (s || '').toString().toLowerCase()
+              const total = procesos.length
+              const demandantes = procesos.filter((p) => norm(p.tipo_participacion).includes('demandante')).length
+              const demandados = procesos.filter((p) => norm(p.tipo_participacion).includes('demandado')).length
+
+              const conteoEtapa = {}
+              procesos.forEach((p) => {
+                const e = p.estadoLabel || 'Sin etapa'
+                conteoEtapa[e] = (conteoEtapa[e] || 0) + 1
+              })
+              const estadosDinamicos = Object.entries(conteoEtapa).map(([label, value]) => ({
+                label,
+                value,
+                color: ['#84120C', '#A02A1E', '#C79B2B', '#3E78C2', '#3FA66B', '#6B7280'][Math.floor(Math.random() * 6)]
+              }))
+
+              return (
+                <div className="space-y-5">
+                  <h1 className="font-sora text-3xl font-bold text-white">Reportes</h1>
+                  <div className="grid gap-5 lg:grid-cols-2">
+                    <Panel titulo="Estado de los procesos" subtitulo="Distribucion por etapa procesal.">
+                      <EstadoBars data={estadosDinamicos.length ? estadosDinamicos : estados} />
+                    </Panel>
+                    <Panel titulo="Tipo de participacion" subtitulo="Demandante vs. demandado.">
+                      <ParticipacionDonut
+                        total={total}
+                        segmentos={[
+                          { label: 'Demandante', value: demandantes, color: '#84120C' },
+                          { label: 'Demandado', value: demandados, color: '#3A3A3A' },
+                        ]}
+                      />
+                    </Panel>
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            })()}
 
             {vista === 'correos' && (
               <div className="space-y-5">
@@ -201,6 +242,8 @@ export default function AdminDashboard({ onHome, onNavigate }) {
             )}
 
             {vista === 'usuarios' && <UserManagementPanel />}
+
+            {vista === 'habeas' && <HabeasPanel />}
 
             {vista === 'config' && (
               <div className="space-y-5">

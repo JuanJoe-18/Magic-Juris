@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react'
-import { Search, History } from 'lucide-react'
+import { Search, History, ShieldCheck } from 'lucide-react'
 
 import { MockContext } from '../context/MockContext'
 import { useAuth } from '../context/AuthContext'
@@ -7,11 +7,13 @@ import TopBar from '../components/shared/TopBar'
 import NavSidebar from '../components/shared/NavSidebar'
 import ClienteConsultaView from '../components/cliente/ClienteConsultaView'
 import ClienteHistorialView from '../components/cliente/ClienteHistorialView'
+import ClienteHabeasView from '../components/cliente/ClienteHabeasView'
 import ChatWidget from '../components/shared/ChatWidget'
 
 const items = [
   { id: 'consulta', label: 'Consulta', icon: Search },
   { id: 'historial', label: 'Historial', icon: History },
+  { id: 'habeas', label: 'Privacidad y Datos', icon: ShieldCheck },
 ]
 
 export default function ClienteDashboard({ onHome, onNavigate }) {
@@ -37,10 +39,14 @@ export default function ClienteDashboard({ onHome, onNavigate }) {
           </div>
 
           <main className="min-w-0">
-            {vista === 'consulta' ? (
+            {vista === 'consulta' && (
               <ClienteConsultaView procesos={procesos} proceso={proceso} onSelect={setProceso} />
-            ) : (
+            )}
+            {vista === 'historial' && (
               <ClienteHistorialView procesos={procesos} proceso={proceso} onSelect={setProceso} />
+            )}
+            {vista === 'habeas' && (
+              <ClienteHabeasView emailUsuario={user?.email} />
             )}
           </main>
         </div>
