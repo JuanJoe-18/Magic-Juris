@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { Circle, Shield, AlertCircle, Search } from 'lucide-react'
 import { clase } from '../abogado/abogadoUi'
 import { EstadoBars, ParticipacionDonut, ActividadLine } from './charts'
@@ -56,7 +55,10 @@ export function CasosTabla({ procesos, titulo, subtitulo, limite }) {
                   {radicadoCorto(p.radicado)}
                 </td>
                 <td className="py-3 pr-4 text-white/70">
-                  {i % 2 === 0 ? 'Demandante' : 'Demandado'}
+                  {p.tipo_participacion
+                    ? p.tipo_participacion[0] +
+                      p.tipo_participacion.slice(1).toLowerCase()
+                    : '—'}
                 </td>
                 <td className="py-3 pr-4 text-white/70">{p.estadoLabel}</td>
                 <td className="py-3 pr-4 text-white/70">{abrevAbogado(p.abogado)}</td>
@@ -75,22 +77,43 @@ export function CasosTabla({ procesos, titulo, subtitulo, limite }) {
   )
 }
 
-// ── Panel principal del Administrador ──
-export default function AdminPanel({ procesos }) {
-  // Conteo real por criticidad (para "requieren atención").
-  const criticos = useMemo(
-    () => procesos.filter((p) => p.criticidad === 'Critica').length,
-    [procesos]
-  )
+const COLORES_ETAPA = {
+  Admitida: '#84120C',
+  Notificación: '#A02A1E',
+  Notificacion: '#A02A1E',
+  Contestación: '#C79B2B',
+  Contestacion: '#C79B2B',
+  Pruebas: '#3E78C2',
+  Sentencia: '#3FA66B',
+  Registrado: '#6B7280',
+}
 
-  // Distribución por etapa (snapshot operativo de la cartera — demo).
-  const estados = [
-    { label: 'Admitida', value: 42, color: '#84120C' },
-    { label: 'Notificación', value: 35, color: '#A02A1E' },
-    { label: 'Contestación', value: 27, color: '#C79B2B' },
-    { label: 'Pruebas', value: 18, color: '#3E78C2' },
-    { label: 'Sentencia', value: 6, color: '#3FA66B' },
-  ]
+// ── Panel principal del Administrador (calcula todo desde datos reales) ──
+export default function AdminPanel({ procesos = [] }) {
+  const norm = (s) => (s || '').toString().toLowerCase()
+  const total = procesos.length
+  const demandantes = procesos.filter((p) =>
+    norm(p.tipo_participacion).includes('demandante')
+  ).length
+  const demandados = procesos.filter((p) =>
+    norm(p.tipo_participacion).includes('demandado')
+  ).length
+  const requieren = procesos.filter((p) =>
+    ['Admitida', 'Sentencia'].includes(p.estadoLabel)
+  ).length
+  const pct = (n) => (total ? Math.round((n / total) * 100) : 0)
+
+  // Distribución por etapa (real).
+  const conteoEtapa = {}
+  procesos.forEach((p) => {
+    const e = p.estadoLabel || 'Sin etapa'
+    conteoEtapa[e] = (conteoEtapa[e] || 0) + 1
+  })
+  const estados = Object.entries(conteoEtapa).map(([label, value]) => ({
+    label,
+    value,
+    color: COLORES_ETAPA[label] || '#6B7280',
+  }))
 
   return (
     <div className="space-y-5">
@@ -129,23 +152,27 @@ export default function AdminPanel({ procesos }) {
         </div>
       </div>
 
-      {/* Métricas */}
+      {/* Métricas (reales) */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard titulo="Casos activos" valor="128" nota="vs. mes anterior">
-          <span className="rounded-md bg-[#84120C] px-2 py-0.5 text-[11px] font-bold text-white">
-            +12%
-          </span>
-        </StatCard>
-        <StatCard titulo="Demandantes" valor="76" nota="59% de la cartera">
+        <StatCard titulo="Casos activos" valor={String(total)} nota="en el catálogo" />
+        <StatCard
+          titulo="Demandantes"
+          valor={String(demandantes)}
+          nota={`${pct(demandantes)}% de la cartera`}
+        >
           <Circle size={26} className="fill-[#84120C] text-[#84120C]" />
         </StatCard>
-        <StatCard titulo="Demandados" valor="52" nota="41% de la cartera">
+        <StatCard
+          titulo="Demandados"
+          valor={String(demandados)}
+          nota={`${pct(demandados)}% de la cartera`}
+        >
           <Shield size={26} className="text-white/80" />
         </StatCard>
         <StatCard
           titulo="Requieren atención"
-          valor={String(criticos > 0 ? criticos + 16 : 18)}
-          nota="Actuaciones alta relevancia"
+          valor={String(requieren)}
+          nota="Etapas con seguimiento prioritario"
         >
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#84120C]">
             <AlertCircle size={15} className="text-white" />
@@ -173,10 +200,10 @@ export default function AdminPanel({ procesos }) {
             Casos donde el cliente actúa como demandante o demandado.
           </p>
           <ParticipacionDonut
-            total={128}
+            total={total}
             segmentos={[
-              { label: 'Demandante', value: 76, color: '#84120C' },
-              { label: 'Demandado', value: 52, color: '#3A3A3A' },
+              { label: 'Demandante', value: demandantes, color: '#84120C' },
+              { label: 'Demandado', value: demandados, color: '#3A3A3A' },
             ]}
           />
         </div>

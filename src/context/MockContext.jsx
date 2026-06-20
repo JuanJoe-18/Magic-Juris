@@ -10,11 +10,11 @@ export const MockProvider = ({ children }) => {
   const [scanResult, setScanResult] = useState(null);
 
   // Simular la detección de un cambio judicial y la respuesta de la IA
+  // Ahora incluye `parte` y `motivo` del Master Prompt de Fajardo.
   const simularEscaneo = () => {
     setIsScanning(true);
     setScanResult(null);
 
-    // Timeout para simular latencia de "Scraping + IA"
     setTimeout(() => {
       setIsScanning(false);
       
@@ -23,11 +23,17 @@ export const MockProvider = ({ children }) => {
       const nuevaActuacion = {
         id: `ACT-${Date.now()}`,
         fecha: new Date().toISOString().split('T')[0],
-        tipo: 'Auto Manda Seguir Adelante Ejecución',
+        tipo: 'Auto',
+        titulo: 'Auto Manda Seguir Adelante Ejecución',
+        descripcion: 'El juzgado ordena continuar con las medidas cautelares y seguir adelante con la ejecución. Requiere acción inmediata para proteger activos.',
         resumenAbogado: 'El juzgado ordena continuar con las medidas cautelares y seguir adelante con la ejecución. Requiere acción inmediata para proteger activos.',
         resumenCliente: 'El juez ha ordenado avanzar con tu caso. Es muy urgente que te comuniques con nosotros hoy mismo para evitar consecuencias financieras.',
-        criticidad: 'Alta',
-        estado: 'Nuevo'
+        criticidad: 'Critica',
+        estado: 'Nuevo',
+        // ── Campos del Master Prompt (Fajardo) ──
+        parte: 'Demandado',
+        motivo: 'Ejecución afecta patrimonio demandado',
+        clasificadoPor: 'gemini',
       };
 
       // Actualizar procesos con la nueva actuación
@@ -60,7 +66,7 @@ export const MockProvider = ({ children }) => {
         actuacion: nuevaActuacion
       });
 
-    }, 3500); // 3.5 segundos de "escaneo"
+    }, 3500);
   };
 
   return (

@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { Search } from 'lucide-react'
+
 import { formatRadicado } from '../../lib/ui'
 
-// ── Barra de búsqueda por radicado, reutilizable ──
-// Permite escribir/seleccionar un radicado y dispara onConsultar(proceso).
-// Incluye sugerencias clicables (los procesos del mockData) para la demo.
 export default function RadicadoSearch({
   procesos = [],
   onSelect,
@@ -14,53 +12,68 @@ export default function RadicadoSearch({
 }) {
   const [valor, setValor] = useState('')
 
-  const buscar = () => {
+  const buscar = async () => {
     const q = valor.trim().toLowerCase()
     if (!q) {
       onSelect?.(procesos[0])
       return
     }
+
     const limpio = q.replace(/\D/g, '')
+    if (limpio && limpio.length === 23) {
+      try {
+        const { processService } = await import('../../services/processService')
+        const process = await processService.getProcessByRadicado(limpio)
+        if (process && !process._mock) {
+          process.cliente = 'Cliente (desde DB)'
+          process.lineaTiempo = process.lineaTiempo || []
+          onSelect?.(process)
+          return
+        }
+      } catch (error) {
+        console.warn('Radicado no encontrado en DB, usando mock...', error)
+      }
+    }
+
     const match =
       procesos.find((p) => limpio && p.radicado.includes(limpio)) ||
       procesos.find((p) => p.cliente.toLowerCase().includes(q)) ||
       procesos[0]
+
     onSelect?.(match)
   }
 
   return (
-    <div className="rounded-[22px] border border-[#262626] bg-[#101010] p-5">
-      <p className="mb-2 text-[12px] font-medium text-white/55">{label}</p>
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="flex flex-1 items-center gap-2 rounded-2xl border border-[#2C2C2C] bg-[#1A1A1A] px-4 py-3">
-          <Search size={16} className="shrink-0 text-white/35" />
+    <div className="rounded-[30px] border border-[#2A2A2A] bg-[#121212] p-5">
+      <p className="mb-3 text-[0.98rem] font-medium text-white/72">{label}</p>
+      <div className="flex flex-col gap-4 xl:flex-row">
+        <div className="flex flex-1 items-center gap-3 rounded-2xl border border-[#333333] bg-[#141414] px-5 py-4">
+          <Search size={18} className="shrink-0 text-white/35" />
           <input
             value={valor}
             onChange={(e) => setValor(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && buscar()}
             placeholder={placeholder}
-            className="w-full bg-transparent text-sm text-white placeholder:text-white/35 focus:outline-none"
+            className="w-full bg-transparent text-[1rem] text-white placeholder:text-white/35 focus:outline-none"
           />
         </div>
+
         <button
           onClick={buscar}
-          className="shrink-0 rounded-2xl bg-[#84120C] px-5 py-3 text-sm font-semibold text-white
-                     transition-colors hover:bg-[#A30F0A] focus:outline-none"
+          className="min-w-[180px] rounded-2xl bg-gradient-to-r from-[#7E120D] to-[#B3160E] px-6 py-4 text-[1rem] font-semibold text-white transition-all hover:brightness-110"
         >
           {boton}
         </button>
       </div>
 
-      {/* Sugerencias rápidas (demo) */}
       {procesos.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-5 flex flex-wrap gap-3">
           {procesos.map((p) => (
             <button
               key={p.id}
               onClick={() => onSelect?.(p)}
               title={formatRadicado(p.radicado)}
-              className="rounded-full border border-[#2A2A2A] bg-[#161616] px-3 py-1.5 text-[11px]
-                         text-white/60 transition-colors hover:border-[#3A3A3A] hover:text-white"
+              className="rounded-full border border-[#2A2A2A] bg-[#171717] px-4 py-2 text-sm text-white/68 transition-colors hover:border-[#3A3A3A] hover:text-white"
             >
               {p.cliente}
             </button>

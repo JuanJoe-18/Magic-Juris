@@ -1,66 +1,46 @@
 import { Bell } from 'lucide-react'
-import RoleSwitcher from '../shared/RoleSwitcher'
 
-// ── Encabezado superior de la vista del Abogado (diseño Fajardo) ──
-// Logo HG (vuelve a la landing) · subtítulo central · pill de usuario.
+import RoleSwitcher from '../shared/RoleSwitcher'
+import { LogoHG } from '../shared/TopBar'
+
 export default function AbogadoHeader({
   titulo,
   subtitulo,
-  onHome,
   mostrarCampana,
+  onHome,
   rolActual,
   onSwitchRole,
+  usuario,
 }) {
   return (
-    <header className="flex items-center justify-between gap-4 px-1 py-2">
-      {/* Logo HG */}
-      <button
-        onClick={onHome}
-        title="Volver al inicio"
-        className="flex items-center gap-3 text-left transition-opacity hover:opacity-80"
-      >
-        <span className="relative font-sora text-3xl font-extrabold leading-none tracking-tight text-white">
-          HG
-          <span className="absolute left-0 top-1/2 h-[3px] w-full -translate-y-1/2 -rotate-12 rounded bg-[#C5202E]" />
-        </span>
-        <span className="hidden font-sora text-sm font-semibold uppercase leading-tight tracking-[0.12em] text-white/90 sm:block">
-          Hurtado
-          <br />
-          Gandini
-        </span>
-      </button>
+    <header className="flex flex-col gap-4 border-b border-white/10 pb-4 lg:flex-row lg:items-center lg:justify-between">
+      <LogoHG onHome={onHome} />
 
-      {/* Título central */}
       <div className="min-w-0 flex-1 text-center">
-        <p className="text-[12px] font-medium tracking-wide text-white/45">
-          {subtitulo ?? 'Sistema de seguimiento judicial'}
-        </p>
-        <h2 className="truncate font-sora text-base font-bold text-white md:text-lg">
-          {titulo}
-        </h2>
+        {subtitulo && <p className="text-[12px] font-medium tracking-wide text-[#D9D9D9]">{subtitulo}</p>}
+        <h2 className="truncate font-sora text-[1.95rem] font-bold text-white">{titulo}</h2>
       </div>
 
-      {/* Usuario */}
-      <div className="flex items-center gap-3">
-        {onSwitchRole && (
-          <RoleSwitcher
-            actual={rolActual}
-            onSwitch={onSwitchRole}
-            onHome={onHome}
-          />
-        )}
+      <div className="flex items-center justify-end gap-3">
         {mostrarCampana && (
           <button
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#2A2A2A] bg-[#161616] text-white/70 transition-colors hover:text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2A2A2A] bg-[#161616] text-white/70 transition-colors hover:text-white"
             title="Notificaciones"
           >
-            <Bell size={16} />
+            <Bell size={18} />
           </button>
         )}
-        <div className="flex items-center gap-2 rounded-full border border-[#2A2A2A] bg-[#161616] px-4 py-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#A30F0A] shadow-[0_0_8px_rgba(163,15,10,0.8)]" />
-          <span className="text-sm font-semibold text-white">Juan S Muñoz</span>
-          <span className="text-[11px] font-semibold tracking-wide text-white/45">ABOGADO</span>
+
+        {onSwitchRole && (
+          <RoleSwitcher actual={rolActual} onSwitch={onSwitchRole} onHome={onHome} />
+        )}
+
+        <div className="flex items-center gap-3 rounded-full border border-[#2A2A2A] bg-[#161616] px-5 py-3">
+          <span className="h-3 w-3 rounded-full bg-[#A30F0A] shadow-[0_0_10px_rgba(163,15,10,0.8)]" />
+          <span className="text-sm font-semibold text-white">{usuario?.nombre ?? 'Abogado HG'}</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-white/55">
+            {usuario?.rol ?? 'ABOGADO'}
+          </span>
         </div>
       </div>
     </header>

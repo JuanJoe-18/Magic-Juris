@@ -20,5 +20,9 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true,
+    // Proxy al backend (Express en :3001) para que el front llame /api/... sin CORS.
+    proxy: {
+      '/api': 'http://localhost:3001',
+    },
   },
 })

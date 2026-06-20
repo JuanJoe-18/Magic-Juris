@@ -1,222 +1,266 @@
 import { useMemo, useState } from 'react'
 import {
-  ChevronDown,
+  ArrowDown,
   ArrowDownWideNarrow,
-  UserRound,
+  Search,
   Shield,
-  FileText,
+  UserRound,
+  Users,
 } from 'lucide-react'
-import { formatRadicado, formatFecha, criticidadPeso } from '../../lib/ui'
+
+import { api } from '../../lib/api'
+import { criticidadPeso } from '../../lib/ui'
 import { clase, nombreDocumento } from './abogadoUi'
-import RadicadoSearch from './RadicadoSearch'
 
-// ── Tarjeta de una actuación (información cruda de la Rama Judicial) ──
-function ActuacionCard({ act }) {
-  const [abierto, setAbierto] = useState(false)
-  const c = clase(act.criticidad)
-  const esDemandado = ['Radicacion', 'Traslado', 'Prueba'].includes(act.tipo)
-  const ParteIcon = esDemandado ? Shield : UserRound
-  const doc = nombreDocumento(act)
-
+function SearchPanel({ radicado, setRadicado, consultar, cargando }) {
   return (
-    <div className="rounded-2xl border border-[#2A2A2A] bg-[#161616] p-4 transition-colors hover:border-[#383838]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-sora text-sm font-bold tracking-wide text-white">
-            <span className="text-white/60">{act.fecha}</span>
-            <span className="mx-2 text-white/30">·</span>
-            {act.titulo.toUpperCase()}
-          </p>
-          <p className="mt-1.5 text-[13px] text-white/55">
-            Anotación:{' '}
-            <span className="text-white/75">
-              {abierto ? act.descripcion : `${act.descripcion.slice(0, 70)}…`}
-            </span>
-          </p>
-          <p className="mt-1 text-[12px] text-white/40">
-            Documento: <span className="text-white/60">{doc}</span>
-          </p>
+    <div className="rounded-[30px] border border-[#2A2A2A] bg-[#121212] p-6">
+      <p className="mb-4 text-[1rem] font-semibold text-white">Radicado</p>
+      <div className="flex flex-col gap-4 xl:flex-row">
+        <div className="flex flex-1 items-center gap-3 rounded-2xl border border-[#333333] bg-[#141414] px-5 py-4">
+          <Search size={18} className="shrink-0 text-white/35" />
+          <input
+            value={radicado}
+            onChange={(e) => setRadicado(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && consultar()}
+            placeholder="Ingrese el numero de radicado a buscar..."
+            className="w-full bg-transparent text-[1rem] text-white placeholder:text-white/35 focus:outline-none"
+          />
         </div>
 
-        <div className="flex shrink-0 flex-col items-center gap-3">
-          <span title={c.nivel}>
-            <ParteIcon size={18} style={{ color: c.color }} />
-          </span>
-          <button
-            onClick={() => setAbierto((v) => !v)}
-            className="text-white/40 transition-colors hover:text-white"
-            aria-label="Expandir actuación"
-          >
-            <ChevronDown
-              size={20}
-              className={`transition-transform ${abierto ? 'rotate-180' : ''}`}
-            />
-          </button>
-        </div>
+        <button
+          onClick={consultar}
+          disabled={cargando}
+          className="min-w-[250px] rounded-2xl bg-gradient-to-r from-[#7E120D] to-[#B3160E] px-6 py-4 text-[1.02rem] font-semibold text-white transition-all hover:brightness-110 disabled:opacity-60"
+        >
+          {cargando ? 'Consultando...' : 'Consultar Rama Judicial'}
+        </button>
       </div>
-
-      {abierto && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[#262626] pt-3 text-[11px]">
-          <span
-            className="rounded-full px-2.5 py-1 font-semibold text-white"
-            style={{ backgroundColor: c.color }}
-          >
-            {c.nivel}
-          </span>
-          <span className="rounded-full bg-[#202020] px-2.5 py-1 text-white/60">
-            Estado {act.estado}
-          </span>
-          {doc !== 'Sin documento asociado' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#202020] px-2.5 py-1 text-white/60">
-              <FileText size={12} /> {doc}
-            </span>
-          )}
-        </div>
-      )}
     </div>
   )
 }
 
-// ── Panel lateral: Guía Visual de Clasificación ──
-function GuiaClasificacion() {
-  const filas = [
-    { nivel: 'Alta', color: '#C5202E', rango: 'De 1 a 7 dias' },
-    { nivel: 'Media', color: '#C79B2B', rango: 'De 7 a 20 dias' },
-    { nivel: 'Baja', color: '#3FA66B', rango: 'De 20 a 30 dias' },
-  ]
-  return (
-    <div className="rounded-[22px] border border-[#262626] bg-[#101010] p-5">
-      <p className="mb-1 flex items-center justify-end gap-1 text-[11px] font-semibold text-white/45">
-        NOTA: ESTO ES URGENCIA <span className="text-white/60">↘</span>
-      </p>
-      <h3 className="mb-4 font-sora text-lg font-bold text-white">
-        Guía Visual De Clasificacion
-      </h3>
+function ActuacionCard({ act }) {
+  const c = clase(act.criticidad)
+  const ParteIcon =
+    act.parte === 'Demandado' ? Shield : act.parte === 'Ambos' ? Users : UserRound
 
-      <div className="space-y-3">
-        {filas.map((f) => (
-          <div key={f.nivel} className="flex items-center gap-3">
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-[24px] border border-[#2A2A2A] bg-[#151515] px-5 py-5">
+      <div className="flex min-w-0 gap-4">
+        <div className="mt-1 flex flex-col items-center">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: c.color }} />
+          <span className="mt-3 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/[0.03]">
+            <ParteIcon size={23} style={{ color: c.color }} />
+          </span>
+        </div>
+
+        <div className="min-w-0">
+          <p className="font-sora text-[1.65rem] font-semibold leading-tight text-white">
+            <span className="mr-3 text-[1.05rem] font-medium text-white/80">{act.fecha}</span>
+            {String(act.titulo || act.tipo || 'Actuacion').toUpperCase()}
+          </p>
+          <p className="mt-3 text-[1rem] text-white/63">
+            Anotacion: {(act.descripcion || '').slice(0, 110)}
+            {(act.descripcion || '').length > 110 ? '...' : ''}
+          </p>
+          <p className="mt-2 text-[0.98rem] text-white/55">
+            Documento: {act.documento || nombreDocumento(act)}
+          </p>
+        </div>
+      </div>
+
+      <button
+        className="mt-6 shrink-0 text-white/58 transition-colors hover:text-white"
+        title="Expandir actuacion"
+      >
+        <ArrowDown size={28} />
+      </button>
+    </div>
+  )
+}
+
+function GuiaClasificacion({ proceso }) {
+  const filas = [
+    { nivel: 'Rojo', color: '#C5202E', rango: 'Urgente' },
+    { nivel: 'Amarillo', color: '#C79B2B', rango: 'Importante' },
+    { nivel: 'Verde', color: '#3FA66B', rango: 'Informativo' },
+  ]
+
+  return (
+    <div className="rounded-[30px] border border-[#2A2A2A] bg-[#121212] p-6">
+      <h3 className="font-sora text-[2rem] font-bold text-white">Guia visual de clasificacion</h3>
+
+      <div className="mt-6 space-y-4">
+        {filas.map((fila) => (
+          <div
+            key={fila.nivel}
+            className="flex items-center gap-4 rounded-[22px] border border-[#2A2A2A] bg-[#151515] p-4"
+          >
             <span
-              className="w-16 rounded-full py-1 text-center text-[12px] font-bold text-white"
-              style={{ backgroundColor: f.color }}
+              className="inline-flex min-w-[72px] justify-center rounded-xl px-4 py-2 text-[1rem] font-bold text-white"
+              style={{ backgroundColor: fila.color }}
             >
-              {f.nivel}
+              {fila.nivel}
             </span>
-            <span className="flex-1 rounded-xl border border-[#2A2A2A] bg-[#161616] px-3 py-1.5 text-center text-[13px] font-semibold text-white/85">
-              {f.rango}
-            </span>
+            <span className="text-[1.05rem] text-white/80">{fila.rango}</span>
           </div>
         ))}
       </div>
 
-      <div className="mt-5 flex gap-2">
-        <span className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#2A2A2A] bg-[#161616] px-3 py-2 text-[12px] font-semibold text-white/80">
-          <Shield size={13} /> Demandado
-        </span>
-        <span className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#2A2A2A] bg-[#161616] px-3 py-2 text-[12px] font-semibold text-white/80">
-          <UserRound size={13} /> Demandante
-        </span>
+      <div className="mt-8 h-px bg-white/10" />
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="flex items-center justify-center gap-3 rounded-[20px] border border-[#2A2A2A] bg-[#151515] px-4 py-5 text-[1rem] font-semibold text-white/88">
+          <Shield size={22} className="text-white/75" /> {proceso?.demandados ? 'Demandado' : 'Demandado'}
+        </div>
+        <div className="flex items-center justify-center gap-3 rounded-[20px] border border-[#2A2A2A] bg-[#151515] px-4 py-5 text-[1rem] font-semibold text-white/88">
+          <UserRound size={22} className="text-white/75" /> {proceso?.demandantes ? 'Demandante' : 'Demandante'}
+        </div>
       </div>
     </div>
   )
 }
 
-// ── Vista Consulta: consulta cruda y autoclasificación de actuaciones ──
-export default function ConsultaView({ procesos, proceso, onSelect }) {
+export default function ConsultaView({ setVista }) {
+  const [radicado, setRadicado] = useState('')
+  const [resultado, setResultado] = useState(null)
+  const [cargando, setCargando] = useState(false)
+  const [aviso, setAviso] = useState(null)
   const [orden, setOrden] = useState('cronologico')
-  const [menuOrden, setMenuOrden] = useState(false)
+
+  const limpio = radicado.replace(/\D/g, '')
+
+  const consultar = () => {
+    if (limpio.length !== 23) {
+      setResultado(null)
+      setAviso('El numero de radicado debe tener 23 digitos.')
+      return
+    }
+
+    setCargando(true)
+    setAviso(null)
+
+    api
+      .consultar(limpio)
+      .then((data) => {
+        setResultado({
+          proceso: data.proceso,
+          actuaciones: data.actuaciones || [],
+          resumenes: data.resumenes || {},
+        })
+
+        if (data.desdeCache) {
+          setAviso('La Rama Judicial no respondio. Mostrando el ultimo estado guardado.')
+        } else {
+          setAviso(
+            data.nuevas > 0
+              ? `Se detectaron ${data.nuevas} nueva(s) actuacion(es).`
+              : 'Consulta realizada sin novedades nuevas.'
+          )
+        }
+      })
+      .catch((error) => {
+        setResultado(null)
+        const msg = String(error?.message || '')
+        setAviso(
+          msg.includes('registrado') || msg.includes('404')
+            ? 'Ese radicado no esta registrado para seguimiento.'
+            : 'No se pudo consultar. Verifica que el backend de seguimiento este activo.'
+        )
+      })
+      .finally(() => setCargando(false))
+  }
 
   const actuaciones = useMemo(() => {
-    const lista = [...(proceso?.lineaTiempo ?? [])]
+    const lista = [...(resultado?.actuaciones || [])]
     if (orden === 'urgencia') {
-      lista.sort(
-        (a, b) =>
-          (criticidadPeso[b.criticidad] ?? 0) - (criticidadPeso[a.criticidad] ?? 0)
-      )
+      lista.sort((a, b) => (criticidadPeso[b.criticidad] ?? 0) - (criticidadPeso[a.criticidad] ?? 0))
     } else {
       lista.sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
     }
     return lista
-  }, [proceso, orden])
+  }, [orden, resultado])
+
+  const ultimaFecha = actuaciones[0]?.fecha || resultado?.proceso?.sincronizadoEn || 'Sin fecha'
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
-        <h1 className="font-sora text-2xl font-bold text-white md:text-3xl">
+        <h1 className="font-sora text-[3rem] font-bold leading-none text-white">
           Consulta profesional por radicado
         </h1>
-        <p className="mt-1 text-sm text-white/45">
-          Vista para abogado: información cruda, clasificación de relevancia y
-          reglas de notificación.
+        <p className="mt-4 text-[1.1rem] text-white/60">
+          Vista para abogado: informacion cruda, clasificacion de relevancia y reglas de notificacion.
         </p>
       </div>
 
-      <RadicadoSearch procesos={procesos} onSelect={onSelect} />
+      <SearchPanel
+        radicado={radicado}
+        setRadicado={setRadicado}
+        consultar={consultar}
+        cargando={cargando}
+      />
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_minmax(280px,340px)]">
-        {/* Últimas actualizaciones */}
-        <div className="rounded-[22px] border border-[#262626] bg-[#101010] p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+      {aviso && <p className="text-[13px] font-medium text-white/55">{aviso}</p>}
+
+      <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
+        <div className="rounded-[30px] border border-[#2A2A2A] bg-[#121212] p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h3 className="font-sora text-lg font-bold text-white">
-                Ultimas Actualizaciones de sus proceso
+              <h3 className="font-sora text-[2rem] font-bold text-white">
+                Ultimas Actualizaciones de sus procesos cargados
               </h3>
-              <p className="mt-1 text-[12px] text-white/40">
-                Fuente: consulta Rama Judicial · Ultima fecha: 18/06/26
+              <p className="mt-2 text-[1rem] text-white/55">
+                Fuente: consulta Rama Judicial · Ultima fecha: {ultimaFecha}
               </p>
             </div>
 
-            {/* Filtro de orden */}
-            <div className="relative">
-              <button
-                onClick={() => setMenuOrden((v) => !v)}
-                className="inline-flex items-center gap-2 rounded-xl border border-[#2A2A2A] bg-[#161616] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1C1C1C]"
-              >
-                Filtrar <ArrowDownWideNarrow size={16} />
-              </button>
-              {menuOrden && (
-                <div className="absolute right-0 z-10 mt-2 w-56 overflow-hidden rounded-xl border border-[#2A2A2A] bg-[#161616] shadow-xl">
-                  {[
-                    { id: 'cronologico', label: 'Ordenar cronologicamente' },
-                    { id: 'urgencia', label: 'Ordenar por urgencia' },
-                  ].map((o) => (
-                    <button
-                      key={o.id}
-                      onClick={() => {
-                        setOrden(o.id)
-                        setMenuOrden(false)
-                      }}
-                      className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-[#202020] ${
-                        orden === o.id ? 'text-white' : 'text-white/60'
-                      }`}
-                    >
-                      {o.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <button
+              onClick={() =>
+                setOrden((current) => (current === 'cronologico' ? 'urgencia' : 'cronologico'))
+              }
+              className="inline-flex items-center gap-3 rounded-2xl border border-[#6B2020] bg-transparent px-5 py-3 text-[1rem] font-semibold text-white/88"
+            >
+              <ArrowDownWideNarrow size={20} /> Filtrar
+            </button>
           </div>
 
-          {proceso && (
-            <p className="mt-3 font-mono text-[11px] text-white/30">
-              {formatRadicado(proceso.radicado)} · {proceso.cliente}
-            </p>
-          )}
-
-          <div className="mt-4 space-y-3">
+          <div className="mt-6 space-y-4">
             {actuaciones.length > 0 ? (
-              actuaciones.map((act, i) => <ActuacionCard key={i} act={act} />)
+              actuaciones.map((act, index) => <ActuacionCard key={`${act.titulo}-${index}`} act={act} />)
             ) : (
-              <div className="rounded-2xl border border-dashed border-[#2A2A2A] py-12 text-center text-sm text-white/40">
-                Seleccione un radicado para consultar sus actuaciones.
+              <div className="rounded-[24px] border border-dashed border-[#2A2A2A] bg-[#111111] px-6 py-12 text-center text-white/45">
+                Consulta un radicado para ver actuaciones clasificadas.
               </div>
             )}
           </div>
         </div>
 
-        <GuiaClasificacion />
+        <div className="space-y-6">
+          <PanelIA setVista={setVista} />
+          <GuiaClasificacion proceso={resultado?.proceso} />
+        </div>
       </div>
+    </div>
+  )
+}
+
+function PanelIA({ setVista }) {
+  return (
+    <div className="rounded-[30px] border border-[#C79B2B]/30 bg-[#121212] p-6 shadow-[0_0_20px_rgba(199,155,43,0.05)]">
+      <div className="mb-3 flex items-center gap-2">
+        <h3 className="font-sora text-[2rem] font-bold text-white">Inteligencia Artificial</h3>
+      </div>
+      <p className="text-[1rem] text-white/55 mb-6 leading-relaxed">
+        El análisis técnico y la generación del lenguaje llano para el cliente se gestionan en su propia vista dedicada a pantalla completa.
+      </p>
+      <button
+        onClick={() => setVista('resumenes')}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#C79B2B] bg-[#C79B2B]/10 px-4 py-4 text-[1.05rem] font-bold text-[#C79B2B] transition-colors hover:bg-[#C79B2B]/20"
+      >
+        Ir a Resúmenes IA
+      </button>
     </div>
   )
 }

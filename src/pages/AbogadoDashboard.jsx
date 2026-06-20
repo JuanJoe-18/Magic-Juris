@@ -1,39 +1,52 @@
 import { useContext, useState } from 'react'
+
+import { useAuth } from '../context/AuthContext'
 import { MockContext } from '../context/MockContext'
-import AbogadoSidebar from '../components/abogado/AbogadoSidebar'
 import AbogadoHeader from '../components/abogado/AbogadoHeader'
+import AbogadoSidebar from '../components/abogado/AbogadoSidebar'
+import AsignarView from '../components/abogado/AsignarView'
 import ConsultaView from '../components/abogado/ConsultaView'
 import HistorialView from '../components/abogado/HistorialView'
-import AsignarView from '../components/abogado/AsignarView'
+import RegistrarProcessView from '../components/abogado/RegistrarProcessView'
+import ResumenesIAView from '../components/abogado/ResumenesIAView'
+import ChatWidget from '../components/shared/ChatWidget'
 
-// Encabezado por vista (texto del header superior).
 const headerPorVista = {
   consulta: {
-    titulo: 'Consulta cruda y autoclasificación de actuaciones',
+    titulo: 'Consulta cruda y autoclasificacion de actuaciones',
     subtitulo: 'Sistema de seguimiento judicial',
     campana: true,
   },
+  resumenes: {
+    titulo: 'Análisis de Inteligencia Artificial',
+    subtitulo: 'Módulo E: Generación de resúmenes por rol',
+    campana: false,
+  },
   historial: {
-    titulo: 'Historial del caso y comunicación al cliente',
+    titulo: 'Powered by MagicJuris',
     subtitulo: 'Sistema de seguimiento judicial',
   },
   asignar: {
-    titulo: 'Asignar Acción al caso',
+    titulo: 'Powered by MagicJuris',
+    subtitulo: 'Sistema de seguimiento judicial',
+  },
+  registrar: {
+    titulo: 'Powered by MagicJuris',
     subtitulo: 'Sistema de seguimiento judicial',
   },
 }
 
-// ── Vista del Abogado (diseño Fajardo): Consulta · Historial · Asignar ──
 export default function AbogadoDashboard({ onHome, onNavigate }) {
   const { procesos } = useContext(MockContext)
+  const { user } = useAuth()
   const [vista, setVista] = useState('consulta')
-  const [proceso, setProceso] = useState(procesos[0] ?? null)
+  const [proceso, setProceso] = useState(null)
 
   const h = headerPorVista[vista]
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] font-inter text-white">
-      <div className="mx-auto max-w-[1440px] px-4 py-5 md:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-5 md:px-8">
         <AbogadoHeader
           titulo={h.titulo}
           subtitulo={h.subtitulo}
@@ -41,40 +54,33 @@ export default function AbogadoDashboard({ onHome, onNavigate }) {
           onHome={onHome}
           rolActual="abogado"
           onSwitchRole={onNavigate}
+          usuario={{ nombre: user?.name, rol: user?.role }}
         />
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
-          {/* Sidebar */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-[300px_1fr]">
           <div className="lg:sticky lg:top-5 lg:h-[calc(100vh-40px)]">
             <AbogadoSidebar vista={vista} setVista={setVista} />
           </div>
 
-          {/* Contenido */}
           <main className="min-w-0">
             {vista === 'consulta' && (
-              <ConsultaView
-                procesos={procesos}
-                proceso={proceso}
-                onSelect={setProceso}
-              />
+              <ConsultaView procesos={procesos} proceso={proceso} onSelect={setProceso} setVista={setVista} />
+            )}
+            {vista === 'resumenes' && (
+              <ResumenesIAView procesos={procesos} proceso={proceso} onSelect={setProceso} />
             )}
             {vista === 'historial' && (
-              <HistorialView
-                procesos={procesos}
-                proceso={proceso}
-                onSelect={setProceso}
-              />
+              <HistorialView procesos={procesos} proceso={proceso} onSelect={setProceso} />
             )}
             {vista === 'asignar' && (
-              <AsignarView
-                procesos={procesos}
-                proceso={proceso}
-                onSelect={setProceso}
-              />
+              <AsignarView procesos={procesos} proceso={proceso} onSelect={setProceso} />
             )}
+            {vista === 'registrar' && <RegistrarProcessView />}
           </main>
         </div>
       </div>
+
+      <ChatWidget rol="abogado" procesoId={proceso?.id} />
     </div>
   )
 }
